@@ -178,5 +178,22 @@ classdef ADSA_Analysis < handle
             disp('Concentrated Loads= ');
             disp(P);
         end
+        
+    function [freeDOF, fixedDOF, knownDOF]= ClassifyDOF(self.fixity)
+        
+        %Transpose the fixity property matrix so linear indexing matches
+        %the number of the DOF of each node
+        fixitytrans=self.fixity';
+        
+        %Find indices of free DOF's
+        freeDOF=find(isnan(fixitytrans));
+        
+        %Find indices of fixed (supported) DOF's
+        fixedDOF=find(fixitytrans==0);
+        
+        %Find indices of DOF's with assigned displacement values
+        knownDOF=find(fixitytrans~=0 & ~isnan(fixitytrans));
+        
     end
+    
 end
