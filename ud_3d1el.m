@@ -217,10 +217,10 @@ function [DEFL,REACT,ELE_FOR,AFLAG] = ud_3d1el(...
 
 %Creating an Analysis Object
 
-%%% Analysis = ADSA_Analysis(nnodes, coord, concen, fixity, nele, ends,A,...
-% 		Izz,Iyy,J,Cw,Zzz,Zyy,Ayy,Azz,E,v,Fy,YldSurf,Wt,webdir, w, thermal);
-%     
-% RunAnalysis(Analysis);
+Analysis = ADSA_Analysis(nnodes, coord, concen, fixity, nele, ends,A,...
+		Izz,Iyy,J,Cw,Zzz,Zyy,Ayy,Azz,E,v,Fy,YldSurf,Wt,webdir, w, thermal);
+    
+RunAnalysis(Analysis);
 
 % DEFL=[]; REACT=[]; ELE_FOR=[];
 % AFLAG = inf;

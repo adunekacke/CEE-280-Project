@@ -176,14 +176,5 @@ classdef ADSA_Analysis < handle
         %Find indices of free DOF's
         freeDOF=find(isnan(fixitytrans));
         
-        %Find indices of fixed (supported) DOF's
-        fixedDOF=find(fixitytrans==0);
-        
-        %Find indices of DOF's with assigned displacement values
-        knownDOF=find(fixitytrans~=0 & ~isnan(fixitytrans));
-    end
-    
-        
-        
         
 end
