@@ -142,6 +142,7 @@ classdef ADSA_Analysis < handle
             Knn= K(knownDOF, knownDOF);
             Ksf= K(fixedDOF, freeDOF);
             Ksn= K(fixedDOF, knownDOF);
+        end
             
             
         function [FeF, P] = CreateLoadVectors(self)
