@@ -134,7 +134,7 @@ classdef ADSA_Analysis < handle
         
         function [Kff, Kfn, Knf, Knn, Ksf, Ksn]= ComputeStiffnessSubMatrices(self)
             
-            [freeDOF, fixedDOF, knownDOF]= ClassifyDOF(self.fixity);
+            [freeDOF, fixedDOF, knownDOF]= ClassifyDOF(self.fixity)
             
             Kff= K(freeDOF, freeDOF);
             Kfn= K(freeDOF, knownDOF);
@@ -142,8 +142,6 @@ classdef ADSA_Analysis < handle
             Knn= K(knownDOF, knownDOF);
             Ksf= K(fixedDOF, freeDOF);
             Ksn= K(fixedDOF, knownDOF);
-            
-            
         function [FeF, P] = CreateLoadVectors(self)
             
             %Initializing the FeF matrix to all zeros
