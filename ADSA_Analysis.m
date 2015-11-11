@@ -80,6 +80,14 @@ classdef ADSA_Analysis < handle
         Kstruct = CreateStiffnessMatrix(self);
         [FeFstruct, Pstruct] = CreateLoadVectors(self);
         end
+        
+        function [AFLAG, DEFL, REACT, ELE_FOR]=GetMastan2Returns(self)
+            AFLAG=self.AFLAG;
+            DEFL=self.DEFL;
+            REACT=self.REACT;
+            ELE_FOR=self.ELE_FOR;
+        end
+        
     end
     
     % Private methods go here
@@ -195,5 +203,36 @@ classdef ADSA_Analysis < handle
         knownDOF=find(fixitytrans~=0 & ~isnan(fixitytrans));
         
     end
+    
+    function AFLAG=CheckKffMatrix(self)
+        
+        %Obtain Kff matrix
+        Kff=ComputeStiffnessSubMatrices(self)
+        
+        %For efficiency, generate an estimate of the condition number
+        kappa=condest(self.Kff);
+        fprintf('Condition number is %.5f', kappa)
+        
+        %Estimate the number of significant digits will be lost
+        %Estimate that P-S=log(kappa) where P is input significant digits
+        %and S is number of reliable significant digits returned
+        lostDigits=log(kappa);
+        fprintf('Results likely to loose %d significant digits', lostDigits)
+        
+    end
+    
+    
+    function [DEFL, REACT]=ComputeDisplacementsReactions(self)
+        
+        %Space for computing
+    end
+    
+    function [ELE_FOR]=RecoverElementForces(self)
+        
+        %Space for computing
+    
+    end
+    
+  end 
     
 end
