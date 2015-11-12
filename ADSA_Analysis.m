@@ -25,8 +25,7 @@ classdef ADSA_Analysis < handle
             Nodes
             Elements
             StructureStiffnessMatrix
-            FeF
-            P
+           
     end
     
     % Public methods go here
@@ -60,9 +59,7 @@ classdef ADSA_Analysis < handle
             %Assembling the structure stiffness matrix from the global
             %stiffness matrix of each element
             self.StructureStiffnessMatrix = CreateStiffnessMatrix(self);
-            %Assembling the fixed end forces and the concentrated loads on
-            %the structure from those acting on each element
-            [self.FeF, self.P] = CreateLoadVectors(self);
+
         end
         
         %% Run the analysis
@@ -122,11 +119,72 @@ classdef ADSA_Analysis < handle
             %Classify DOF
             [freeDOF, fixedDOF, knownDOF]= ClassifyDOF(self);
             
+
              %ComputStiffnessSubMatrices
             [Kff, Kfn, Knf, Knn, Ksf, Ksn]= ComputeStiffnessSubMatrices(self, freeDOF, fixedDOF, knownDOF);
            
              %CreateLoadVector
              
+
+            %Obtaining the Stiffness Sub Matrices
+            [Kff, Kfn, Knf, Knn, Ksf, Ksn]= ComputeStiffnessSubMatrices(self, freeDOF, fixedDOF, knownDOF);
+            
+            %Obtaining the applied loads, displacements and fixed end
+            %forces
+            [Pf, Ps, Pn, FeFf, FeFs, FeFn, DeltaN] = CreateLoadVectors(self);
+            
+            % Displacements at the Free DOFs
+            DeltaF= Kff\(Pf - FeFf - Kfn*DeltaN);
+            
+            %Forces/Reactions at Fixed DOFs
+            Ps= Ksf*DeltaF + Ksn*DeltaN + FeFs - Ps;
+            
+            %Forces/Reactions at Known DOFs
+            Pn= Knf*DeltaF + Knn*DeltaN + FeFn - Pn;
+            
+            %Initializing DEFL to zeros of 6 rows (No. of DOFs in a node)
+            %and total number of nodes as number of columns
+            DEFL= zeros(6, self.nnodes);
+            
+            %Placing the values of DeltaF in the indeces corresponding to
+            %the Free DOFs
+            DEFL(freeDOF)= DeltaF;
+            
+            %Placing the values of DeltaN in the indeces corresponding to
+            %the Known DOFs
+            DEFL(knownDOF)= DeltaN;
+            
+            %Placing Zero as values in the indeces corresponding to
+            %the Fixed DOFs as there will be zero displacements there
+            DEFL(fixedDOF)= 0;
+            
+            %Transposing the DEFL matrix to have 6 columns (corresponding 
+            %to 6 DOFs in a node) and number of nodes as the number of
+            %rows- The format which MASTAN2 requires
+            DEFL= DEFL';
+            
+            %Initializing REACT to zeros of 6 rows (No. of DOFs in a node)
+            %and total number of nodes as number of columns
+            REACT= zeros(6, self.nnodes);
+            
+            %Placing Zero as values in the indeces corresponding to
+            %the Free DOFs as there will be No reactions there
+            REACT(freeDOF)= 0;
+            
+            %Placing the values of Pn in the indeces corresponding to
+            %the Known DOFs
+            REACT(knownDOF)= Pn;
+            
+            %Placing the values of Ps in the indeces corresponding to
+            %the Fixed DOFs
+            REACT(fixedDOF)= Ps;
+            
+            %Transposing the REACT matrix to have 6 columns (corresponding 
+            %to 6 DOFs in a node) and number of nodes as the number of
+            %rows- The format which MASTAN2 requires
+            REACT= REACT';
+                
+
         end
         
         %Method to create a vector of node objects
@@ -291,7 +349,7 @@ classdef ADSA_Analysis < handle
                     [DEFL(self.ends(i,1), 1:6),DEFL(self.ends(i,2), 1:6)]);
             end
     end
-      
+    
     end
     
 end 
