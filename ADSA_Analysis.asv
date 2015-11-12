@@ -247,7 +247,6 @@ classdef ADSA_Analysis < handle
         
     end
     
-    %Method to check the conditioning of K 
     function AFLAG= CheckKffMatrix(self)
         
         %Obtain Kff matrix
@@ -263,7 +262,6 @@ classdef ADSA_Analysis < handle
         lostDigits=log(kappa);
         fprintf('Results likely to loose %d significant digits', lostDigits)
         
-        %Assign AFLAG based on how many significant digits will be lost
         if lostDigits >= 16
             AFLAG= 0;
         else
@@ -277,15 +275,12 @@ classdef ADSA_Analysis < handle
         %Space for computing
     end
     
-    %Method to recover element forces from the element method and store in
-    %the Mastan format
     function ELE_FOR=RecoverElementForces(self, DEFL)
         
         %Initialize element forces to a matrix of zeroes
         ELE_FOR=zeros(self.nele, 12);
         
-        %Loop over all elements, calling public method of element and
-        %passing element object and deflections 
+        %Loop over all elements
             for i=1:self.nele
                 ELE_FOR(i, 1:12)=ComputeForces(self.Elements(i), ...
                     [DEFL(self.ends(i,1), 1:6),DEFL(self.ends(i,2), 1:6)]);
