@@ -118,13 +118,6 @@ classdef ADSA_Analysis < handle
             
             %Classify DOF
             [freeDOF, fixedDOF, knownDOF]= ClassifyDOF(self);
-            
-
-             %ComputStiffnessSubMatrices
-            [Kff, Kfn, Knf, Knn, Ksf, Ksn]= ComputeStiffnessSubMatrices(self, freeDOF, fixedDOF, knownDOF);
-           
-             %CreateLoadVector
-             
 
             %Obtaining the Stiffness Sub Matrices
             [Kff, Kfn, Knf, Knn, Ksf, Ksn]= ComputeStiffnessSubMatrices(self, freeDOF, fixedDOF, knownDOF);
@@ -238,11 +231,8 @@ classdef ADSA_Analysis < handle
         %Method to split the structural stiffness matrix into the funtional
         %pieces needed.
         function [Kff, Kfn, Knf, Knn, Ksf, Ksn]= ComputeStiffnessSubMatrices(self, freeDOF, fixedDOF, knownDOF)
-                      
 
-            
             K= self.StructureStiffnessMatrix;
-            
 
             Kff= K(freeDOF, freeDOF);
             Kfn= K(freeDOF, knownDOF);
@@ -251,6 +241,7 @@ classdef ADSA_Analysis < handle
             Ksf= K(fixedDOF, freeDOF);
             Ksn= K(fixedDOF, knownDOF);
         end
+        
             
         %Method to create the load vectors from the concentrated loads and 
         %distributed loads and divide into pieces that correspond to 
@@ -272,7 +263,7 @@ classdef ADSA_Analysis < handle
             
             concen_t= self.concen';
             
-%             [freeDOF, fixedDOF, knownDOF]= ClassifyDOF(self);
+            [freeDOF, fixedDOF, knownDOF]= ClassifyDOF(self);
             
             Pf= concen_t(freeDOF);
             Ps= concen_t(fixedDOF);
