@@ -65,14 +65,14 @@ classdef ADSA_Analysis < handle
         %% Run the analysis
         function [AFLAG, DEFL, REACT, ELE_FOR]=RunAnalysis(self)
             %Call function which calculates values Mastan is expecting
-        	[AFLAG, DEFL, REACT, ELE_FOR]=GetMastan2Returns(self)
+        	[AFLAG, DEFL, REACT, ELE_FOR]=GetMastan2Returns(self);
             
             %Call function to compute the percent error in loads at free
             %DOF's
             Error=ComputeError(self, DEFL);
             
             %Display to Command Window
-            fprintf('Percent Error of Pf: %.4f', Effor)
+            fprintf('Percent Error of Pf: %.4f\n', Error);
         end
         
         function [AFLAG, DEFL, REACT, ELE_FOR]=GetMastan2Returns(self)
@@ -99,16 +99,16 @@ classdef ADSA_Analysis < handle
             %Get DOF's that are free and known
             [freeDOF, fixedDOF, knownDOF]=ClassifyDOF(self);
             %Transpose DEFL for use of linear indexing
-            DEFLt=DEFL';
+            DEFL=DEFL';
             %Get vectors of free and known deflections
-            deltaf=DEFLt(freeDOF);
-            deltan=DEFLt(knownDOF);
+            deltaf=DEFL(freeDOF);
+            deltan=DEFL(knownDOF);
             %Get stiffness submatrices
             [Kff, Kfn]= ComputeStiffnessSubMatrices(self, freeDOF, fixedDOF, knownDOF);
             %Calculate Loads at free DOF's
             Pfback=Kff*deltaf+Kfn*deltan;
             %Create actual load vector
-            [Pfreal] = CreateLoadVectors(self);
+            [Pfreal] = CreateLoadVectors(self, freeDOF, fixedDOF, knownDOF);
             %Compute percent error in loads at free DOF's
             error=(Pfreal-Pfback).*100./Pfreal;
                        
@@ -124,7 +124,7 @@ classdef ADSA_Analysis < handle
             
             %Obtaining the applied loads, displacements and fixed end
             %forces
-            [Pf, Ps, Pn, FeFf, FeFs, FeFn, DeltaN] = CreateLoadVectors(self);
+            [Pf, Ps, Pn, FeFf, FeFs, FeFn, DeltaN] = CreateLoadVectors(self, freeDOF, fixedDOF, knownDOF);
             
             % Displacements at the Free DOFs
             DeltaF= Kff\(Pf - FeFf - Kfn*DeltaN);
@@ -246,7 +246,7 @@ classdef ADSA_Analysis < handle
         %Method to create the load vectors from the concentrated loads and 
         %distributed loads and divide into pieces that correspond to 
         %degrees of freedom with free, fixed, and known displacements.
-        function [Pf, Ps, Pn, FeFf, FeFs, FeFn, DeltaN] = CreateLoadVectors(self)
+        function [Pf, Ps, Pn, FeFf, FeFs, FeFn, DeltaN] = CreateLoadVectors(self, freeDOF, fixedDOF, knownDOF)
             
             %Initializing the FeF matrix to all zeros
             FeF = zeros(self.nnodes*6,1);
@@ -262,8 +262,6 @@ classdef ADSA_Analysis < handle
             end
             
             concen_t= self.concen';
-            
-            [freeDOF, fixedDOF, knownDOF]= ClassifyDOF(self);
             
             Pf= concen_t(freeDOF);
             Ps= concen_t(fixedDOF);

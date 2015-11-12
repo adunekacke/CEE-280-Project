@@ -7,11 +7,7 @@ classdef ADSA_Analysis < handle
             nnodes
             Coordinates
             concen
-<<<<<<< HEAD
             fixity
-=======
-            Fixity
->>>>>>> origin/master
             nele
             Ends
             A
@@ -29,12 +25,7 @@ classdef ADSA_Analysis < handle
             Nodes
             Elements
             StructureStiffnessMatrix
-<<<<<<< HEAD
-            FeF
-            P
-=======
            
->>>>>>> origin/master
     end
     
     % Public methods go here
@@ -68,18 +59,11 @@ classdef ADSA_Analysis < handle
             %Assembling the structure stiffness matrix from the global
             %stiffness matrix of each element
             self.StructureStiffnessMatrix = CreateStiffnessMatrix(self);
-<<<<<<< HEAD
-            %Assembling the fixed end forces and the concentrated loads on
-            %the structure from those acting on each element
-            [self.FeF, self.P] = CreateLoadVectors(self);
-=======
 
->>>>>>> origin/master
         end
         
         %% Run the analysis
         function [AFLAG, DEFL, REACT, ELE_FOR]=RunAnalysis(self)
-<<<<<<< HEAD
             %Call function which calculates values Mastan is expecting
         	[AFLAG, DEFL, REACT, ELE_FOR]=GetMastan2Returns(self)
             
@@ -88,16 +72,11 @@ classdef ADSA_Analysis < handle
             Error=ComputeError(self, DEFL);
             
             %Display to Command Window
-            fprintf('Percent Error of Pf: %.4f', Effor)
-=======
-        	[AFLAG, DEFL, REACT, ELE_FOR]=GetMastan2Returns(self)
-            [Error]=ComputeError(self)
->>>>>>> origin/master
+            fprintf('Percent Error of Pf: %.4f', Error)
         end
         
         function [AFLAG, DEFL, REACT, ELE_FOR]=GetMastan2Returns(self)
             %Calls ComputeDisplacementReactions
-<<<<<<< HEAD
             [DEFL, REACT]=ComputeDisplacementReactions(self);
             
             %RecoverElementForces
@@ -105,11 +84,6 @@ classdef ADSA_Analysis < handle
             
             %CheckKffMatrix
             AFLAG= CheckKffMatrix(self);
-=======
-            %RecoverElementForces
-            ELE_FOR=RecoverElementForces(self, DEFL);
-            %CheckKffMatrix
->>>>>>> origin/master
         end
         
         
@@ -120,7 +94,6 @@ classdef ADSA_Analysis < handle
     methods (Access = private)
         
               
-<<<<<<< HEAD
         function error=ComputeError(self, DEFL)
                         
             %Get DOF's that are free and known
@@ -139,24 +112,13 @@ classdef ADSA_Analysis < handle
             %Compute percent error in loads at free DOF's
             error=(Pfreal-Pfback).*100./Pfreal;
                        
-=======
-        function error=ComputeError(self)
-            %Space for computing
->>>>>>> origin/master
         end
         
         function [DEFL, REACT]=ComputeDisplacementReactions(self)
             
             %Classify DOF
             [freeDOF, fixedDOF, knownDOF]= ClassifyDOF(self);
-            
-<<<<<<< HEAD
-             %ComputStiffnessSubMatrices
-            [Kff, Kfn, Knf, Knn, Ksf, Ksn]= ComputeStiffnessSubMatrices(self, freeDOF, fixedDOF, knownDOF);
-           
-             %CreateLoadVector
-             
-=======
+
             %Obtaining the Stiffness Sub Matrices
             [Kff, Kfn, Knf, Knn, Ksf, Ksn]= ComputeStiffnessSubMatrices(self, freeDOF, fixedDOF, knownDOF);
             
@@ -189,17 +151,33 @@ classdef ADSA_Analysis < handle
             %the Fixed DOFs as there will be zero displacements there
             DEFL(fixedDOF)= 0;
             
+            %Transposing the DEFL matrix to have 6 columns (corresponding 
+            %to 6 DOFs in a node) and number of nodes as the number of
+            %rows- The format which MASTAN2 requires
             DEFL= DEFL';
             
+            %Initializing REACT to zeros of 6 rows (No. of DOFs in a node)
+            %and total number of nodes as number of columns
             REACT= zeros(6, self.nnodes);
             
+            %Placing Zero as values in the indeces corresponding to
+            %the Free DOFs as there will be No reactions there
             REACT(freeDOF)= 0;
+            
+            %Placing the values of Pn in the indeces corresponding to
+            %the Known DOFs
             REACT(knownDOF)= Pn;
+            
+            %Placing the values of Ps in the indeces corresponding to
+            %the Fixed DOFs
             REACT(fixedDOF)= Ps;
             
+            %Transposing the REACT matrix to have 6 columns (corresponding 
+            %to 6 DOFs in a node) and number of nodes as the number of
+            %rows- The format which MASTAN2 requires
             REACT= REACT';
                 
->>>>>>> origin/master
+
         end
         
         %Method to create a vector of node objects
@@ -228,12 +206,8 @@ classdef ADSA_Analysis < handle
             end
         end
         
-<<<<<<< HEAD
         %Method to generate the complete structural stiffness matrix by
         %combining global stiffness matrices of individual elements
-=======
-        
->>>>>>> origin/master
         function StructureStiffnessMatrix = CreateStiffnessMatrix(self)
             
             %Initializing the K matrix to all zeros
@@ -254,18 +228,11 @@ classdef ADSA_Analysis < handle
             StructureStiffnessMatrix = K;
         end
         
-<<<<<<< HEAD
         %Method to split the structural stiffness matrix into the funtional
         %pieces needed.
-=======
-
->>>>>>> origin/master
         function [Kff, Kfn, Knf, Knn, Ksf, Ksn]= ComputeStiffnessSubMatrices(self, freeDOF, fixedDOF, knownDOF)
-                      
 
-            
             K= self.StructureStiffnessMatrix;
-            
 
             Kff= K(freeDOF, freeDOF);
             Kfn= K(freeDOF, knownDOF);
@@ -274,14 +241,11 @@ classdef ADSA_Analysis < handle
             Ksf= K(fixedDOF, freeDOF);
             Ksn= K(fixedDOF, knownDOF);
         end
+        
             
-<<<<<<< HEAD
         %Method to create the load vectors from the concentrated loads and 
         %distributed loads and divide into pieces that correspond to 
         %degrees of freedom with free, fixed, and known displacements.
-=======
-            
->>>>>>> origin/master
         function [Pf, Ps, Pn, FeFf, FeFs, FeFn, DeltaN] = CreateLoadVectors(self)
             
             %Initializing the FeF matrix to all zeros
@@ -297,15 +261,9 @@ classdef ADSA_Analysis < handle
                     + GetFixedEndForcesGlobal(self.Elements(i));
             end
             
-<<<<<<< HEAD
             concen_t= self.concen';
             
-%             [freeDOF, fixedDOF, knownDOF]= ClassifyDOF(self);
-=======
-            concen_t= concen';
-            
             [freeDOF, fixedDOF, knownDOF]= ClassifyDOF(self);
->>>>>>> origin/master
             
             Pf= concen_t(freeDOF);
             Ps= concen_t(fixedDOF);
@@ -338,17 +296,14 @@ classdef ADSA_Analysis < handle
         
     end
     
+    %Method to check the conditioning of K 
     function AFLAG= CheckKffMatrix(self)
         
         %Obtain Kff matrix
         Kff=ComputeStiffnessSubMatrices(self);
         
         %For efficiency, generate an estimate of the condition number
-<<<<<<< HEAD
         kappa= condest(Kff);
-=======
-        kappa= condest(self.Kff);
->>>>>>> origin/master
         fprintf('Condition number is %.5f', kappa)
         
         %Estimate the number of significant digits will be lost
@@ -357,6 +312,7 @@ classdef ADSA_Analysis < handle
         lostDigits=log(kappa);
         fprintf('Results likely to loose %d significant digits', lostDigits)
         
+        %Assign AFLAG based on how many significant digits will be lost
         if lostDigits >= 16
             AFLAG= 0;
         else
@@ -370,22 +326,21 @@ classdef ADSA_Analysis < handle
         %Space for computing
     end
     
+    %Method to recover element forces from the element method and store in
+    %the Mastan format
     function ELE_FOR=RecoverElementForces(self, DEFL)
         
         %Initialize element forces to a matrix of zeroes
         ELE_FOR=zeros(self.nele, 12);
         
-        %Loop over all elements
+        %Loop over all elements, calling public method of element and
+        %passing element object and deflections 
             for i=1:self.nele
                 ELE_FOR(i, 1:12)=ComputeForces(self.Elements(i), ...
                     [DEFL(self.ends(i,1), 1:6),DEFL(self.ends(i,2), 1:6)]);
             end
     end
-<<<<<<< HEAD
-      
-=======
     
->>>>>>> origin/master
     end
     
 end 
