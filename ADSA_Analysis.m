@@ -72,7 +72,7 @@ classdef ADSA_Analysis < handle
             Error=ComputeError(self, DEFL);
             
             %Display to Command Window
-            fprintf('Percent Error of Pf: %.4f', Effor)
+            fprintf('Percent Error of Pf: %.4f', Error)
         end
         
         function [AFLAG, DEFL, REACT, ELE_FOR]=GetMastan2Returns(self)
@@ -98,17 +98,23 @@ classdef ADSA_Analysis < handle
                         
             %Get DOF's that are free and known
             [freeDOF, fixedDOF, knownDOF]=ClassifyDOF(self);
+            
             %Transpose DEFL for use of linear indexing
-            DEFLt=DEFL';
+            DEFL=DEFL';
+            
             %Get vectors of free and known deflections
-            deltaf=DEFLt(freeDOF);
-            deltan=DEFLt(knownDOF);
+            deltaf=DEFL(freeDOF);
+            deltan=DEFL(knownDOF);
+            
             %Get stiffness submatrices
             [Kff, Kfn]= ComputeStiffnessSubMatrices(self, freeDOF, fixedDOF, knownDOF);
+            
             %Calculate Loads at free DOF's
             Pfback=Kff*deltaf+Kfn*deltan;
+            
             %Create actual load vector
             [Pfreal] = CreateLoadVectors(self);
+            
             %Compute percent error in loads at free DOF's
             error=(Pfreal-Pfback).*100./Pfreal;
                        
