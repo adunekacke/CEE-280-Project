@@ -14,19 +14,14 @@ classdef ADSA_Analysis < handle
             Izz
             Iyy
             J
-            Cw
             Zzz
             Zyy
             Ayy
             Azz
             E
             v
-            Fy
-            YldSurf
-            Wt
             webdir
             DistribLoads
-            Thermal
             Nodes
             Elements
             StructureStiffnessMatrix
@@ -37,9 +32,9 @@ classdef ADSA_Analysis < handle
     % Public methods go here
     methods (Access = public)
         %% Constructor
-        %  Replace XYZ by your initials before proceeding
-        function self = ADSA_Analysis(nnodes, coord, concen, fixity, nele, ends,A,Izz,Iyy,J,Cw,Zzz,Zyy,...
-		Ayy,Azz,E,v,Fy,YldSurf,Wt,webdir, w, thermal)
+ 
+        function self = ADSA_Analysis(nnodes, coord, concen, fixity, nele, ends,A,Izz,Iyy,J,Zzz,Zyy,...
+		Ayy,Azz,E,v,webdir, w)
             self.nnodes=nnodes;
             self.Coordinates=coord;
             self.ConcenLoads=concen;
@@ -50,19 +45,14 @@ classdef ADSA_Analysis < handle
             self.Izz=Izz;
             self.Iyy=Iyy;
             self.J=J;
-            self.Cw=Cw;
             self.Zzz=Zzz;
             self.Zyy=Zyy;
             self.Ayy=Ayy;
             self.Azz=Azz;
             self.E=E;
             self.v=v;
-            self.Fy=Fy;
-            self.YldSurf=YldSurf;
-            self.Wt=Wt;
             self.webdir=webdir;
             self.DistribLoads=w;
-            self.Thermal=thermal;
             %Creating a vector of Node Objects
             self.Nodes=CreateNodes(self);
             %Creating a vector of Element Objects
@@ -76,22 +66,41 @@ classdef ADSA_Analysis < handle
         end
         
         %% Run the analysis
-        function RunAnalysis(self)
-        Kstruct = CreateStiffnessMatrix(self);
-        [FeFstruct, Pstruct] = CreateLoadVectors(self);
+        function [AFLAG, DEFL, REACT, ELE_FOR]=RunAnalysis(self)
+        	[AFLAG, DEFL, REACT, ELE_FOR]=GetMastan2Returns(self)
+            [Error]=ComputeError(self)
         end
         
         function [AFLAG, DEFL, REACT, ELE_FOR]=GetMastan2Returns(self)
-            AFLAG=self.AFLAG;
-            DEFL=self.DEFL;
-            REACT=self.REACT;
-            ELE_FOR=self.ELE_FOR;
+            %Calls ComputeDisplacementReactions
+            %RecoverElementForces
+            ELE_FOR=RecoverElementForces(self, DEFL);
+            %CheckKffMatrix
         end
+        
+        
         
     end
     
     % Private methods go here
     methods (Access = private)
+        
+              
+        function error=ComputeError(self)
+            %Space for computing
+        end
+        
+        function [DEFL, REACT]=ComputeDisplacementReactions(self)
+            
+            %Classify DOF
+            [freeDOF, fixedDOF, knownDOF]= ClassifyDOF(self);
+            
+            %CreatStiffnessMatrix
+            [Kff, Kfn, Knf, Knn, Ksf, Ksn]= ComputeStiffnessSubMatrices(self, freeDOF, fixedDOF, knownDOF);
+           
+            %ComputStiffnessSubMatrices
+            %CreateLoadVector
+        end
         
         %Method to create a vector of node objects
         function Nodes=CreateNodes(self)
@@ -140,10 +149,8 @@ classdef ADSA_Analysis < handle
             StructureStiffnessMatrix = K;
         end
         
-        function [Kff, Kfn, Knf, Knn, Ksf, Ksn]= ComputeStiffnessSubMatrices(self)
-            
-            [freeDOF, fixedDOF, knownDOF]= ClassifyDOF(self.fixity);
-            
+        function [Kff, Kfn, Knf, Knn, Ksf, Ksn]= ComputeStiffnessSubMatrices(self, freeDOF, fixedDOF, knownDOF)
+                      
             Kff= K(freeDOF, freeDOF);
             Kfn= K(freeDOF, knownDOF);
             Knf= K(knownDOF, freeDOF);
@@ -187,7 +194,7 @@ classdef ADSA_Analysis < handle
             disp(P);
         end
         
-    function [freeDOF, fixedDOF, knownDOF]= ClassifyDOF(self.fixity)
+    function [freeDOF, fixedDOF, knownDOF]= ClassifyDOF(self)
         
         %Transpose the fixity property matrix so linear indexing matches
         %the number of the DOF of each node
@@ -227,12 +234,19 @@ classdef ADSA_Analysis < handle
         %Space for computing
     end
     
-    function [ELE_FOR]=RecoverElementForces(self)
+    function ELE_FOR=RecoverElementForces(self, DEFL)
         
-        %Space for computing
-    
+        %Initialize element forces to a matrix of zeroes
+        ELE_FOR=zeros(self.nele, 12);
+        
+        %Loop over all elements
+            for i=1:self.nele
+                ELE_FOR(i, 1:12)=ComputeForces(self.Elements(i), ...
+                    [DEFL(self.ends(i,1), 1:6),DEFL(self.ends(i,2), 1:6)]);
+            end
+    end
+      
     end
     
-  end 
+end 
     
-end

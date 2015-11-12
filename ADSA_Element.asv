@@ -69,8 +69,8 @@ classdef ADSA_Element < handle
     methods (Access = public)
         %% Constructor
         
-        function self = ADSA_Element(element_nodes,A,Izz,Iyy,J,Zzz,Zyy,...
-		Ayy,Azz,E,v,webdir,w)
+        function self = ADSA_Element(element_nodes,A,Izz,Iyy,J,Cw,Zzz,Zyy,...
+		Ayy,Azz,E,v,Fy,YldSurf,Wt,webdir,w)
             self.elementNodes=element_nodes;
             self.A=A;
             self.Izz=Izz;
@@ -126,7 +126,7 @@ classdef ADSA_Element < handle
             %Computing local forces using local stiffness, fixed end
             %forces, and gamma to transform global displacement at the
             %element's DOF's into element's local coordinates
-            elementForces=self.localStiffness*self.Gamma*eleDelta'*...
+            elementForces=self.localStiffness*self.Gamma*eleDelta*...
                 self.FixedEndForcesLocal;
         end
         
@@ -270,7 +270,7 @@ classdef ADSA_Element < handle
         function [FixedEndForcesLocal, FixedEndForcesGlobal]=ComputeFixedEndForces(self)
             %First, assemble a 12x1 matrix of local FEF's using general
             %equations.
-            FixedEndForcesLocal=[-self.DistribLoad(1)*self.length/2;
+            FixedEndForcesLocal=[-self.DistribLoad(1)*self.length/2;%MUST ADD w to PROPERTIES!
                                  -self.DistribLoad(2)*self.length/2;
                                  -self.DistribLoad(3)*self.length/2;
                                  0;
