@@ -6,7 +6,7 @@ classdef ADSA_Analysis < handle
     properties (Access = private)
             nnodes
             Coordinates
-            ConcenLoads
+            concen
             Fixity
             nele
             Ends
@@ -42,8 +42,8 @@ classdef ADSA_Analysis < handle
 		Ayy,Azz,E,v,Fy,YldSurf,Wt,webdir, w, thermal)
             self.nnodes=nnodes;
             self.Coordinates=coord;
-            self.ConcenLoads=concen;
-            self.Fixity=fixity;
+            self.concen=concen;
+            self.fixity=fixity;
             self.nele=nele;
             self.Ends=ends;
             self.A=A;
@@ -140,9 +140,12 @@ classdef ADSA_Analysis < handle
             StructureStiffnessMatrix = K;
         end
         
+        
         function [Kff, Kfn, Knf, Knn, Ksf, Ksn]= ComputeStiffnessSubMatrices(self)
             
             [freeDOF, fixedDOF, knownDOF]= ClassifyDOF(self.fixity);
+            
+            K= self.StructureStiffnessMatrix;
             
             Kff= K(freeDOF, freeDOF);
             Kfn= K(freeDOF, knownDOF);
@@ -153,7 +156,7 @@ classdef ADSA_Analysis < handle
         end
             
             
-        function [FeF, P] = CreateLoadVectors(self)
+        function [Pf, Ps, Pn, FeFf, FeFs, FeFn, DeltaN] = CreateLoadVectors(self)
             
             %Initializing the FeF matrix to all zeros
             FeF = zeros(self.nnodes*6,1);
@@ -168,49 +171,48 @@ classdef ADSA_Analysis < handle
                     + GetFixedEndForcesGlobal(self.Elements(i));
             end
             
-            %Initializing the P matrix to all zeros
-            P = zeros(self.nnodes*6,1);
+            concen_t= concen';
             
-            % Looping over all the element objects
-            for i= 1:self.nele
-                %Assembling the matrix of the concentrated forces on the 
-                %structure by adding the values of the concentrated forces
-                %on a specific DOF to the corresponding DOF in the P matrix
-                %of the structure
-                P(GetElementDOF(self.Elements(i))) = P(GetElementDOF(self.Elements(i)))...
-                 + [self.ConcenLoads(GetNodeDOF(self.Nodes(self.Ends(i, 1))));...
-                 self.ConcenLoads(GetNodeDOF(self.Nodes(self.Ends(i, 2))))];
-            end
-            disp('FeF= ');
-            disp(FeF);
-            disp('Concentrated Loads= ');
-            disp(P);
+            [freeDOF, fixedDOF, knownDOF]= ClassifyDOF(self);
+            
+            Pf= concen_t(freeDOF);
+            Ps= concen_t(fixedDOF);
+            Pn= concen_t(knownDOF);
+            
+            FeFf= FeF(freeDOF);
+            FeFs= FeF(fixedDOF);
+            FeFn= FeF(knownDOF);
+            
+            
+            fixitytrans= self.fixity';
+            DeltaN= fixitytrans(knownDOF);
+
         end
         
-    function [freeDOF, fixedDOF, knownDOF]= ClassifyDOF(self.fixity)
+    function [freeDOF, fixedDOF, knownDOF]= ClassifyDOF(self)
         
         %Transpose the fixity property matrix so linear indexing matches
         %the number of the DOF of each node
-        fixitytrans=self.fixity';
+        fixitytrans= self.fixity';
         
         %Find indices of free DOF's
-        freeDOF=find(isnan(fixitytrans));
+        freeDOF= find(isnan(fixitytrans));
         
         %Find indices of fixed (supported) DOF's
-        fixedDOF=find(fixitytrans==0);
+        fixedDOF= find(fixitytrans==0);
         
         %Find indices of DOF's with assigned displacement values
-        knownDOF=find(fixitytrans~=0 & ~isnan(fixitytrans));
+        knownDOF= find(fixitytrans~=0 & ~isnan(fixitytrans));
         
     end
     
-    function AFLAG=CheckKffMatrix(self)
+    function AFLAG= CheckKffMatrix(self)
         
         %Obtain Kff matrix
-        Kff=ComputeStiffnessSubMatrices(self)
+        Kff=ComputeStiffnessSubMatrices(self);
         
         %For efficiency, generate an estimate of the condition number
-        kappa=condest(self.Kff);
+        kappa= condest(self.Kff);
         fprintf('Condition number is %.5f', kappa)
         
         %Estimate the number of significant digits will be lost
@@ -219,6 +221,11 @@ classdef ADSA_Analysis < handle
         lostDigits=log(kappa);
         fprintf('Results likely to loose %d significant digits', lostDigits)
         
+        if lostDigits >= 16
+            AFLAG= 0;
+        else
+            AFLAG= 1;
+        end
     end
     
     
