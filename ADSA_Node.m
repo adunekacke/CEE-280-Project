@@ -36,8 +36,8 @@ classdef ADSA_Node < handle
     % Private methods go here
     methods (Access = private)
         %Assigning the DOFs to the nodes according to their node numbers
-        function AssignDOF(self, node_number)
-        self.node_dof=6*(node_number-1) + (1:6)';
+        function AssignDOF(self)
+        self.node_dof=6*(self.node_number-1) + (1:6)';
         end
     end
 end
