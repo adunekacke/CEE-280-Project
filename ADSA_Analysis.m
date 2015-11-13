@@ -73,7 +73,8 @@ classdef ADSA_Analysis < handle
             
             %Display to Command Window
 
-            fprintf('Percent Error of Pf: %.4f\n', Error);
+            disp('Error in Loads at Free DOF''s:')
+            fprintf('%.16f\n\n', Error);
 
         end
         
@@ -104,11 +105,9 @@ classdef ADSA_Analysis < handle
             %Transpose DEFL for use of linear indexing
             DEFL=DEFL';
 
-            
             %Get vectors of free and known deflections
             deltaf=DEFL(freeDOF);
             deltan=DEFL(knownDOF);
-            
 
             %Get stiffness submatrices
             [Kff, Kfn]= ComputeStiffnessSubMatrices(self, freeDOF, fixedDOF, knownDOF);
@@ -117,11 +116,11 @@ classdef ADSA_Analysis < handle
             Pfback=Kff*deltaf+Kfn*deltan;
             
             %Create actual load vector
+            [Pfreal, ~, ~, FEFreal] = CreateLoadVectors(self, freeDOF, fixedDOF, knownDOF);
+            realLoads=Pfreal-FEFreal;
 
-            [Pfreal] = CreateLoadVectors(self, freeDOF, fixedDOF, knownDOF);
-
-            %Compute percent error in loads at free DOF's
-            error=(Pfreal-Pfback).*100./Pfreal;
+            %Compute error in loads at free DOF's
+            error=realLoads-Pfback;
                        
         end
         
@@ -210,10 +209,10 @@ classdef ADSA_Analysis < handle
                 %end of the element and the element properties as arguments
                 Elements(i)=ADSA_Element([self.Nodes(self.Ends(i, 1)), ...
                     self.Nodes(self.Ends(i,2))],self.A(i),...
-                    self.Izz(i),self.Iyy(i),self.J(i),self.Cw(i),...
+                    self.Izz(i),self.Iyy(i),self.J(i),...
                     self.Zzz(i),self.Zyy(i),self.Ayy(i),self.Azz(i),...
-                    self.E(i),self.v(i),self.Fy(i),self.YldSurf(i,:),...
-                    self.Wt(i),self.webdir(i,:), self.DistribLoads(i,:));
+                    self.E(i),self.v(i), self.webdir(i,:), ...
+                    self.DistribLoads(i,:));
             end
         end
         
@@ -233,8 +232,8 @@ classdef ADSA_Analysis < handle
                     K(GetElementDOF(self.Elements(i)),GetElementDOF(self.Elements(i)))... 
                     + GetGlobalStiffness(self.Elements(i));
             end
-            disp('Structure Stiffness Matrix= ');
-            disp(K);
+           
+            %Store as a sparse matrix
             K = sparse(K);
             StructureStiffnessMatrix = K;
         end
@@ -308,21 +307,24 @@ classdef ADSA_Analysis < handle
     %Method to check the conditioning of K 
     function AFLAG= CheckKffMatrix(self)
         
+        %Get DOF's
+        [freeDOF, fixedDOF, knownDOF]= ClassifyDOF(self);
+        
         %Obtain Kff matrix
-        Kff=ComputeStiffnessSubMatrices(self);
+        Kff=ComputeStiffnessSubMatrices(self, freeDOF, fixedDOF, knownDOF);
         
         %For efficiency, generate an estimate of the condition number
         kappa= condest(Kff);
-        fprintf('Condition number is %.5f', kappa)
+        fprintf('Condition number is %d\n\n', kappa)
         
         %Estimate the number of significant digits will be lost
         %Estimate that P-S=log(kappa) where P is input significant digits
         %and S is number of reliable significant digits returned
-        lostDigits=log(kappa);
-        fprintf('Results likely to loose %d significant digits', lostDigits)
+        lostDigits=log10(kappa);
+        fprintf('Results likely to lose %.1f significant digits\n\n', lostDigits)
         
         %Assign AFLAG based on how many significant digits will be lost
-        if lostDigits >= 16
+        if lostDigits > 13
             AFLAG= 0;
         else
             AFLAG= 1;
@@ -346,7 +348,7 @@ classdef ADSA_Analysis < handle
         %passing element object and deflections 
             for i=1:self.nele
                 ELE_FOR(i, 1:12)=ComputeForces(self.Elements(i), ...
-                    [DEFL(self.ends(i,1), 1:6),DEFL(self.ends(i,2), 1:6)]);
+                    [DEFL(self.Ends(i,1), 1:6),DEFL(self.Ends(i,2), 1:6)]);
             end
     end
     

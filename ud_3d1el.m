@@ -215,15 +215,18 @@ function [DEFL,REACT,ELE_FOR,AFLAG] = ud_3d1el(...
 %       ADSA_Node
 % 
 
+%AFLAG is infinity until the analysis is performed and it is modified
+AFLAG = inf;
+
 %Creating an Analysis Object
 
-%%% Analysis = ADSA_Analysis(nnodes, coord, concen, fixity, nele, ends,A,...
-% 		Izz,Iyy,J,Cw,Zzz,Zyy,Ayy,Azz,E,v,Fy,YldSurf,Wt,webdir, w, thermal);
-%     
-% RunAnalysis(Analysis);
+Analysis = ADSA_Analysis(nnodes, coord, concen, fixity, nele, ends,A,Izz,Iyy,J,Zzz,Zyy,...
+		Ayy,Azz,E,v,webdir, w);
+    
+[AFLAG, DEFL, REACT, ELE_FOR]=Analysis.RunAnalysis()
 
 % DEFL=[]; REACT=[]; ELE_FOR=[];
-% AFLAG = inf;
+ 
 
 %% Diagnostic tools: Instructions
 
@@ -284,19 +287,18 @@ disp_global_arrays = [];
 
 % Pref 6: Error vector (true/false)
 %         Display the difference between the back-calculated and original Pf vectors?
-disp_error = false;
-
+disp_error = true;
+% 
 % % Diagnostic tools: Code
 % % 
-% % % Instantiate an object of the Analysis class
-% % analysis = RC_Analysis(nnodes, coord, fixity, concen, nele, ends, A, Ayy, Azz, Iyy, Izz, J, E, v, ...
-% %         webdir, w, truss);
-% % 
-% % % Run the 1st order analysis
-% % analysis.RunAnalysis(disp_elements, disp_element_data, disp_nodes, disp_node_data, disp_global_arrays, ...
-% %         disp_error);
-% % 
-% % % Extract the matrices to be returned to Mastan2
-% % [DEFL, REACT, ELE_FOR, AFLAG] = analysis.GetMastan2Returns();
+% % Instantiate an object of the Analysis class
+% analysis = RC_Analysis(nnodes, coord, fixity, concen, nele, ends, A, Ayy, Azz, Iyy, Izz, J, E, v, ...
+%         webdir, w, truss);
+% 
+% % Run the 1st order analysis
+% analysis.RunAnalysis(disp_elements, disp_element_data, disp_nodes, disp_node_data, disp_global_arrays, disp_error);
+% 
+% % Extract the matrices to be returned to Mastan2
+% [DEFL, REACT, ELE_FOR, AFLAG] = analysis.GetMastan2Returns();
 
 end

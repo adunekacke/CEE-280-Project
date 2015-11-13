@@ -126,7 +126,8 @@ classdef ADSA_Element < handle
             %Computing local forces using local stiffness, fixed end
             %forces, and gamma to transform global displacement at the
             %element's DOF's into element's local coordinates
-            elementForces=self.localStiffness*self.Gamma*eleDelta'*...
+            
+            elementForces=(self.localStiffness*self.Gamma*eleDelta')+...
                 self.FixedEndForcesLocal;
         end
         
