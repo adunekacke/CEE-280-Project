@@ -7,8 +7,8 @@ function [DEFL,REACT,ELE_FOR,AFLAG] = ud_3d1el(...
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
+%  Functions Called
 %  
-%              
 %
 %  Dictionary of Variables
 %     Input Information:
@@ -206,7 +206,14 @@ function [DEFL,REACT,ELE_FOR,AFLAG] = ud_3d1el(...
 %       Version 1.0/Student's Initials/Date of Modification
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Student's code
 
+%   You will implement the following three classes:
+%
+%       ADSA_Analysis
+%       ADSA_Element
+%       ADSA_Node
+% 
 
 %AFLAG is infinity until the analysis is performed and it is modified
 AFLAG = inf;

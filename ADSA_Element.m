@@ -54,10 +54,10 @@ classdef ADSA_Element < handle
         E 
         v 
         webdir
-        DistribLoad
+        distribLoad
         % The variables below are created within methods called by the constructor
         length
-        Gamma
+        gamma
         localStiffness
         globalStiffness
         element_dof
@@ -83,12 +83,12 @@ classdef ADSA_Element < handle
             self.E=E;
             self.v=v;
             self.webdir=webdir;
-            self.DistribLoad=w;
+            self.distribLoad=w;
             %Calling private method to compute and store the element length
             self.length=ComputeLength(self);  
             %Calling private method computes and store the element
             %transformation matrix
-            self.Gamma=ComputeTransformationMatrix(self); 
+            self.gamma=ComputeTransformationMatrix(self); 
             %Calling the private method to compute and store the local and
             %global stiffness matrices of the element
             [self.localStiffness, self.globalStiffness]=ComputeElasticStiffnessMatrix(self); 
@@ -127,7 +127,7 @@ classdef ADSA_Element < handle
             %forces, and gamma to transform global displacement at the
             %element's DOF's into element's local coordinates
             
-            elementForces=(self.localStiffness*self.Gamma*eleDelta')+...
+            elementForces=(self.localStiffness*self.gamma*eleDelta')+...
                 self.FixedEndForcesLocal;
         end
         
@@ -252,7 +252,7 @@ classdef ADSA_Element < handle
             
             %Tranform local stiffness matrix to global coordinates using
             %the transformation matrix.
-            globalStiffness=transpose(self.Gamma)*localStiffness*self.Gamma;
+            globalStiffness=transpose(self.gamma)*localStiffness*self.gamma;
         end
         
         %Retrieving the element DOFs corresponding to the start and end
@@ -271,21 +271,21 @@ classdef ADSA_Element < handle
         function [FixedEndForcesLocal, FixedEndForcesGlobal]=ComputeFixedEndForces(self)
             %First, assemble a 12x1 matrix of local FEF's using general
             %equations.
-            FixedEndForcesLocal=[-self.DistribLoad(1)*self.length/2;
-                                 -self.DistribLoad(2)*self.length/2;
-                                 -self.DistribLoad(3)*self.length/2;
+            FixedEndForcesLocal=[-self.distribLoad(1)*self.length/2;
+                                 -self.distribLoad(2)*self.length/2;
+                                 -self.distribLoad(3)*self.length/2;
                                  0;
-                                 (self.DistribLoad(3)*self.length^2)/12;
-                                 -(self.DistribLoad(2)*self.length^2)/12;
-                                 -self.DistribLoad(1)*self.length/2;
-                                 -self.DistribLoad(2)*self.length/2;
-                                 -self.DistribLoad(3)*self.length/2;
+                                 (self.distribLoad(3)*self.length^2)/12;
+                                 -(self.distribLoad(2)*self.length^2)/12;
+                                 -self.distribLoad(1)*self.length/2;
+                                 -self.distribLoad(2)*self.length/2;
+                                 -self.distribLoad(3)*self.length/2;
                                  0;
-                                 -(self.DistribLoad(3)*self.length^2)/12;
-                                 (self.DistribLoad(2)*self.length^2)/12];
+                                 -(self.distribLoad(3)*self.length^2)/12;
+                                 (self.distribLoad(2)*self.length^2)/12];
             
             %The FEF's in global coordinates are the transposed Gamma matrix times the local FEF's                 
-            FixedEndForcesGlobal=self.Gamma'*FixedEndForcesLocal;
+            FixedEndForcesGlobal=self.gamma'*FixedEndForcesLocal;
         end                              
     end
 end
