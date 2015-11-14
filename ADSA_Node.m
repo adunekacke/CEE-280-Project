@@ -18,7 +18,7 @@ classdef ADSA_Node < handle
         function self = ADSA_Node(node_coord, node_number)
             self.node_coord = node_coord;
             self.node_number = node_number;
-            AssignDOF(self, node_number)
+            AssignDOF(self)
         end
         
         %% Get functions of the Node Class to create copies and access the
@@ -36,8 +36,8 @@ classdef ADSA_Node < handle
     % Private methods go here
     methods (Access = private)
         %Assigning the DOFs to the nodes according to their node numbers
-        function AssignDOF(self, node_number)
-        self.node_dof=6*(node_number-1) + (1:6)';
+        function AssignDOF(self)
+        self.node_dof=6*(self.node_number-1) + (1:6)';
         end
     end
 end

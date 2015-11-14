@@ -78,17 +78,18 @@ classdef ADSA_Analysis < handle
         end
         
         function [AFLAG, DEFL, REACT, ELE_FOR]=GetMastan2Returns(self)
-            %CheckKffMatrix
-            AFLAG= CheckKffMatrix(self);
-            
             %Calls ComputeDisplacementReactions
             [DEFL, REACT]=ComputeDisplacementReactions(self);
             
             %RecoverElementForces
             ELE_FOR=RecoverElementForces(self, DEFL);
-  
+            
+            %CheckKffMatrix
+            AFLAG= CheckKffMatrix(self);
         end
- 
+        
+        
+        
     end
     
     % Private methods go here
