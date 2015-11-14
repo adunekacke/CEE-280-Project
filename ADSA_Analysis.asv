@@ -30,6 +30,7 @@ classdef ADSA_Analysis < handle
             Knn
             Ksf
             Ksn
+            StructureStiffnessMatrix
            
     end
     
@@ -61,10 +62,9 @@ classdef ADSA_Analysis < handle
             self.Nodes=CreateNodes(self);
             %Creating a vector of Element Objects
             self.Elements=CreateElements(self);
-            %Obtaining the structure stiffness sub matrices by first 
-            %assembling the structure stiffness matrix from the global
-            %stiffness matrix of each element and then dividing them
-            %corresponding to their associated DOFs
+            %Assembling the structure stiffness matrix from the global
+            %stiffness matrix of each element
+            self.StructureStiffnessMatrix = CreateStiffnessMatrix(self);
             [self.Kff, self.Kfn, self.Knf, self.Knn, self.Ksf, self.Ksn]= ComputeStiffnessSubMatrices(self);
 
         end
@@ -218,6 +218,13 @@ classdef ADSA_Analysis < handle
             end
         end
         
+        %Method to generate the complete structural stiffness matrix by
+        %combining global stiffness matrices of individual elements
+        function StructureStiffnessMatrix = CreateStiffnessMatrix(self)
+            
+            
+        end
+        
         %Method to Create the structure stiffness matrix and then split it
         %into the funtional pieces needed.
         function [Kff, Kfn, Knf, Knn, Ksf, Ksn]= ComputeStiffnessSubMatrices(self)
@@ -230,8 +237,8 @@ classdef ADSA_Analysis < handle
             %of the K matrix are being stored and the function is also
             %required to be called just once in the analysis.
             
-            %Creating the complete Structure Stiffness Matrix by
-            %combining global stiffness matrices of individual elements
+            %Creating the Structure Stiffness Matrix the complete structural stiffness matrix by
+        %combining global stiffness matrices of individual elements
             
             %Initializing the K matrix to all zeros
             K = zeros(self.nnodes*6); 
@@ -314,9 +321,14 @@ classdef ADSA_Analysis < handle
     %Method to check the conditioning of K 
     function AFLAG= CheckKffMatrix(self)
         
+        %Get DOF's
+        [freeDOF, fixedDOF, knownDOF]= ClassifyDOF(self);
+        
+        %Obtain Kff matrix
+        Kff=ComputeStiffnessSubMatrices(self, freeDOF, fixedDOF, knownDOF);
         
         %For efficiency, generate an estimate of the condition number
-        kappa= condest(self.Kff);
+        kappa= condest(Kff);
         fprintf('Condition number is %d\n\n', kappa)
         
         %Estimate the number of significant digits will be lost
@@ -331,7 +343,13 @@ classdef ADSA_Analysis < handle
         else
             AFLAG= 1;
         end
-    end   
+    end
+    
+    
+    function [DEFL, REACT]=ComputeDisplacementsReactions(self)
+        
+        %Space for computing
+    end
     
     %Method to recover element forces from the element method and store in
     %the Mastan format
