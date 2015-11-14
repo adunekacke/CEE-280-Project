@@ -24,7 +24,12 @@ classdef ADSA_Analysis < handle
             DistribLoads
             Nodes
             Elements
-            StructureStiffnessMatrix
+            Kff
+            Kfn
+            Knf
+            Knn
+            Ksf
+            Ksn
            
     end
     
@@ -56,9 +61,11 @@ classdef ADSA_Analysis < handle
             self.Nodes=CreateNodes(self);
             %Creating a vector of Element Objects
             self.Elements=CreateElements(self);
-            %Assembling the structure stiffness matrix from the global
-            %stiffness matrix of each element
-            self.StructureStiffnessMatrix = CreateStiffnessMatrix(self);
+            %Obtaining the structure stiffness sub matrices by first 
+            %assembling the structure stiffness matrix from the global
+            %stiffness matrix of each element and then dividing them
+            %corresponding to their associated DOFs
+            [self.Kff, self.Kfn, self.Knf, self.Knn, self.Ksf, self.Ksn]= ComputeStiffnessSubMatrices(self);
 
         end
         
@@ -77,6 +84,14 @@ classdef ADSA_Analysis < handle
 
         end
         
+
+        
+        
+    end
+    
+    % Private methods go here
+    methods (Access = private)
+        
         function [AFLAG, DEFL, REACT, ELE_FOR]=GetMastan2Returns(self)
             %CheckKffMatrix
             AFLAG= CheckKffMatrix(self);
@@ -88,13 +103,7 @@ classdef ADSA_Analysis < handle
             ELE_FOR=RecoverElementForces(self, DEFL);
   
         end
- 
-    end
-    
-    % Private methods go here
-    methods (Access = private)
-        
-              
+
         function error=ComputeError(self, DEFL)
                         
             %Get DOF's that are free and known
@@ -107,11 +116,8 @@ classdef ADSA_Analysis < handle
             deltaf=DEFL(freeDOF);
             deltan=DEFL(knownDOF);
 
-            %Get stiffness submatrices
-            [Kff, Kfn]= ComputeStiffnessSubMatrices(self, freeDOF, fixedDOF, knownDOF);
-            
             %Calculate Loads at free DOF's
-            Pfback=Kff*deltaf+Kfn*deltan;
+            Pfback=self.Kff*deltaf+self.Kfn*deltan;
             
             %Create actual load vector
             [Pfreal, ~, ~, FEFreal] = CreateLoadVectors(self, freeDOF, fixedDOF, knownDOF);
@@ -126,22 +132,19 @@ classdef ADSA_Analysis < handle
             
             %Classify DOF
             [freeDOF, fixedDOF, knownDOF]= ClassifyDOF(self);
-
-            %Obtaining the Stiffness Sub Matrices
-            [Kff, Kfn, Knf, Knn, Ksf, Ksn]= ComputeStiffnessSubMatrices(self, freeDOF, fixedDOF, knownDOF);
             
             %Obtaining the applied loads, displacements and fixed end
             %forces
             [Pf, Ps, Pn, FeFf, FeFs, FeFn, DeltaN] = CreateLoadVectors(self, freeDOF, fixedDOF, knownDOF);
             
             % Displacements at the Free DOFs
-            DeltaF= Kff\(Pf - FeFf - Kfn*DeltaN);
+            DeltaF= self.Kff\(Pf - FeFf - self.Kfn*DeltaN);
             
             %Forces/Reactions at Fixed DOFs
-            Ps= Ksf*DeltaF + Ksn*DeltaN + FeFs - Ps;
+            Ps= self.Ksf*DeltaF + self.Ksn*DeltaN + FeFs - Ps;
             
             %Forces/Reactions at Known DOFs
-            Pn= Knf*DeltaF + Knn*DeltaN + FeFn - Pn;
+            Pn= self.Knf*DeltaF + self.Knn*DeltaN + FeFn - Pn;
             
             %Initializing DEFL to zeros of 6 rows (No. of DOFs in a node)
             %and total number of nodes as number of columns
@@ -214,9 +217,20 @@ classdef ADSA_Analysis < handle
             end
         end
         
-        %Method to generate the complete structural stiffness matrix by
-        %combining global stiffness matrices of individual elements
-        function StructureStiffnessMatrix = CreateStiffnessMatrix(self)
+        %Method to Create the structure stiffness matrix and then split it
+        %into the funtional pieces needed.
+        function [Kff, Kfn, Knf, Knn, Ksf, Ksn]= ComputeStiffnessSubMatrices(self)
+            %Creating the structure stiffness matrix and Computing
+            %Stiffness Sub Matrices methods have been merged into one.
+            %Keeping them as separate methods required the K matrix (in its
+            %sparse form) to be stored as a property and the
+            %ComputeStiffnessSubMatrices function being called thrice in
+            %the analysis. Now only the required 6 out of the 9 sub parts
+            %of the K matrix are being stored and the function is also
+            %required to be called just once in the analysis.
+            
+            %Creating the complete Structure Stiffness Matrix by
+            %combining global stiffness matrices of individual elements
             
             %Initializing the K matrix to all zeros
             K = zeros(self.nnodes*6); 
@@ -233,14 +247,8 @@ classdef ADSA_Analysis < handle
            
             %Store as a sparse matrix
             K = sparse(K);
-            StructureStiffnessMatrix = K;
-        end
-        
-        %Method to split the structural stiffness matrix into the funtional
-        %pieces needed.
-        function [Kff, Kfn, Knf, Knn, Ksf, Ksn]= ComputeStiffnessSubMatrices(self, freeDOF, fixedDOF, knownDOF)
-
-            K= self.StructureStiffnessMatrix;
+            
+            [freeDOF, fixedDOF, knownDOF]=  ClassifyDOF(self);
 
             Kff= K(freeDOF, freeDOF);
             Kfn= K(freeDOF, knownDOF);
@@ -305,14 +313,9 @@ classdef ADSA_Analysis < handle
     %Method to check the conditioning of K 
     function AFLAG= CheckKffMatrix(self)
         
-        %Get DOF's
-        [freeDOF, fixedDOF, knownDOF]= ClassifyDOF(self);
-        
-        %Obtain Kff matrix
-        Kff=ComputeStiffnessSubMatrices(self, freeDOF, fixedDOF, knownDOF);
         
         %For efficiency, generate an estimate of the condition number
-        kappa= condest(Kff);
+        kappa= condest(self.Kff);
         fprintf('Condition number is %d\n\n', kappa)
         
         %Estimate the number of significant digits will be lost
@@ -327,13 +330,7 @@ classdef ADSA_Analysis < handle
         else
             AFLAG= 1;
         end
-    end
-    
-    
-    function [DEFL, REACT]=ComputeDisplacementsReactions(self)
-        
-        %Space for computing
-    end
+    end   
     
     %Method to recover element forces from the element method and store in
     %the Mastan format
