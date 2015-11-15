@@ -6,7 +6,7 @@ classdef ADSA_Node < handle
     properties (Access = private)
         % 3x1 vector containing the x, y, and z coordinates of the node
         nodeCoord
-        nodeDOF
+        node_dof
         nodeNumber
     end
     
@@ -25,14 +25,14 @@ classdef ADSA_Node < handle
         %copies of assigned properties from outside the class
         
         %Getting the coordinates of the node
-        function nodeCoord = GetNodeCoord(self)
-            nodeCoord = self.nodeCoord;
+        function node_coord = GetNodeCoord(self)
+            node_coord = self.node_coord;
         end
         
         
         %Getting the DOFs of the node 
-        function nodeDOF = GetNodeDOF(self)
-            nodeDOF = self.nodeDOF;
+        function node_dof = GetNodeDOF(self)
+            node_dof = self.node_dof;
         end
         
     end
@@ -44,7 +44,7 @@ classdef ADSA_Node < handle
         %Assigning the DOFs to the nodes according to their node numbers
         function AssignDOF(self)
             
-        self.nodeDOF=6*(self.nodeNumber-1) + (1:6)';
+        self.node_dof=6*(self.node_number-1) + (1:6)';
         
         end
         

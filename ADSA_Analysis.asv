@@ -37,8 +37,8 @@ classdef ADSA_Analysis < handle
     methods (Access = public)
         
         %% Constructor
-        function self = ADSA_Analysis(nnodes, coord, concen, fixity,...
-                     nele, ends,A,Izz,Iyy,J,Zzz,Zyy,Ayy,Azz,E,v,webdir, w)
+        function self = ADSA_Analysis(nnodes, coord, concen, fixity, nele, ...
+                           ends,A,Izz,Iyy,J,Zzz,Zyy,Ayy,Azz,E,v,webdir, w)
             self.nnodes=nnodes;
             self.Coordinates=coord;
             self.concen=concen;
@@ -234,10 +234,10 @@ classdef ADSA_Analysis < handle
             fprintf('Condition number is %d\n\n', kappa)
         
             %Estimate the number of significant digits will be lost
-            %Estimate that P-S=log(kappa) where P is input significant 
-            %digits and S is number of reliable significant digits returned
+            %Estimate that P-S=log(kappa) where P is input significant digits
+            %and S is number of reliable significant digits returned
             lostDigits=log10(kappa);
-            fprintf('Likely to lose %.1f sign. digits\n\n', lostDigits)
+            fprintf('Results likely to lose %.1f signif digits\n\n', lostDigits)
         
             %Assign AFLAG based on how many significant digits will be lost
                 %Matlab can store 16; 3 are desired in return; no more than
@@ -258,8 +258,7 @@ classdef ADSA_Analysis < handle
             
             %Obtaining the applied loads, displacements and fixed end
             %forces
-            [Pf, Ps, Pn, FeFf, FeFs, FeFn, DeltaN] = ...
-                     CreateLoadVectors(self, freeDOF, fixedDOF, knownDOF);
+            [Pf, Ps, Pn, FeFf, FeFs, FeFn, DeltaN] = CreateLoadVectors(self, freeDOF, fixedDOF, knownDOF);
             
             % Displacements at the Free DOFs
             DeltaF= self.Kff\(Pf - FeFf - self.Kfn*DeltaN);
@@ -318,8 +317,7 @@ classdef ADSA_Analysis < handle
         %Method to create the load vectors from the concentrated loads and
         %distributed loads and divide into pieces that correspond to 
         %degrees of freedom with free, fixed, and known displacements.
-        function [Pf, Ps, Pn, FeFf, FeFs, FeFn, DeltaN] = ...
-                       CreateLoadVectors(self, freeDOF, fixedDOF, knownDOF)
+        function [Pf, Ps, Pn, FeFf, FeFs, FeFn, DeltaN] = CreateLoadVectors(self, freeDOF, fixedDOF, knownDOF)
             
             %Initializing the FeF matrix to all zeros
             FeF = zeros(self.nnodes*6,1);
@@ -330,8 +328,7 @@ classdef ADSA_Analysis < handle
                 %structure by adding the values of the global FeF matrix of
                 %the elements to the corresponding DOFs in the structure 
                 %FeF matrix
-                FeF(GetElementDOF(self.Elements(i)))=...
-                    FeF(GetElementDOF(self.Elements(i)))...
+                FeF(GetElementDOF(self.Elements(i)))=FeF(GetElementDOF(self.Elements(i)))...
                     + GetFixedEndForcesGlobal(self.Elements(i));
             end
             
@@ -352,8 +349,8 @@ classdef ADSA_Analysis < handle
         end
 
         
-        %Method to recover element forces from the element method and store
-        %in the Mastan format
+        %Method to recover element forces from the element method and store in
+        %the Mastan format
         function ELE_FOR=RecoverElementForces(self, DEFL)
 
             %Initialize element forces to a matrix of zeroes
@@ -363,7 +360,7 @@ classdef ADSA_Analysis < handle
             %passing element object and deflections 
                 for i=1:self.nele
                     ELE_FOR(i, 1:12)=ComputeForces(self.Elements(i), ...
-                    [DEFL(self.Ends(i,1), 1:6),DEFL(self.Ends(i,2), 1:6)]);
+                        [DEFL(self.Ends(i,1), 1:6),DEFL(self.Ends(i,2), 1:6)]);
                 end
         end
     

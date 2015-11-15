@@ -11,9 +11,7 @@ function [DEFL,REACT,ELE_FOR,AFLAG] = ud_3d1el(...
 %       ADSA_Analysis      Constructs the analysis object and stores its
 %                            properties
 %       RunAnalysis        Conducts analysis of the structure, performing
-%                            stifffness method computations and returning 
-%                            the structure's deflections, reactions, and
-%                            element forces to Mastan2        
+%       stifffness method computations and returning 
 %
 %  Dictionary of Variables
 %     Input Information:
@@ -161,7 +159,7 @@ function [DEFL,REACT,ELE_FOR,AFLAG] = ud_3d1el(...
 %                              anatype = 6  Inelastic Buckling (Eigenvalue)
 %
 %     Local Information:
-%       None
+%              < to be defined by the student >
 %
 %     Output Information:
 %       DEFL(i,1:6)      ==  node i's calculated 6 d.o.f. deflections
@@ -208,7 +206,7 @@ function [DEFL,REACT,ELE_FOR,AFLAG] = ud_3d1el(...
 %                              AFLAG = inf   No analysis code available
 %
 %
-%       Version 4.0/ADSA/11/15/2015
+%       Version 1.0/Student's Initials/Date of Modification
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Student's code
@@ -223,13 +221,12 @@ function [DEFL,REACT,ELE_FOR,AFLAG] = ud_3d1el(...
 %AFLAG is infinity until the analysis is performed and it is modified
 AFLAG = inf;
 
-%Create an Analysis Object
+%Creating an Analysis Object
+
 Analysis = ADSA_Analysis(nnodes, coord, concen, fixity, nele, ends,A,Izz,Iyy,J,Zzz,Zyy,...
 		Ayy,Azz,E,v,webdir, w);
     
-%The public RunAnalysis method performs all the calculations necessary for
-%Mastan2 returns
-[AFLAG, DEFL, REACT, ELE_FOR]=Analysis.RunAnalysis();
+[AFLAG, DEFL, REACT, ELE_FOR]=Analysis.RunAnalysis()
 
 % DEFL=[]; REACT=[]; ELE_FOR=[];
  
