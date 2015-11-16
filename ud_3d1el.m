@@ -160,9 +160,6 @@ function [DEFL,REACT,ELE_FOR,AFLAG] = ud_3d1el(...
 %                              anatype = 5  Elastic Buckling (Eigenvalue)
 %                              anatype = 6  Inelastic Buckling (Eigenvalue)
 %
-%     Local Information:
-%       None
-%
 %     Output Information:
 %       DEFL(i,1:6)      ==  node i's calculated 6 d.o.f. deflections
 %                              DEFL(i,1) = displacement in X direction

@@ -54,8 +54,8 @@ classdef ADSA_Element < handle
         localStiffness
         globalStiffness
         elementDOF
-        FixedEndForcesLocal
-        FixedEndForcesGlobal
+        fixedEndForcesLocal
+        fixedEndForcesGlobal
     end
     
     
@@ -63,9 +63,9 @@ classdef ADSA_Element < handle
     methods (Access = public)
         
         %% Constructor
-        function self = ADSA_Element(element_nodes,A,Izz,Iyy,J,Zzz,Zyy,...
+        function self = ADSA_Element(elementNodes,A,Izz,Iyy,J,Zzz,Zyy,...
 		                              Ayy,Azz,E,v,webDir,w)
-            self.elementNodes=element_nodes;
+            self.elementNodes=elementNodes;
             self.A=A;
             self.Izz=Izz;
             self.Iyy=Iyy;
@@ -91,7 +91,7 @@ classdef ADSA_Element < handle
             self.elementDOF=RetrieveDOF(self);
             %Computing and storing the local and global fixed end forces of
             %the element
-            [self.FixedEndForcesLocal, self.FixedEndForcesGlobal]=ComputeFixedEndForces(self);
+            [self.fixedEndForcesLocal, self.fixedEndForcesGlobal]=ComputeFixedEndForces(self);
         end
         
         
@@ -110,8 +110,8 @@ classdef ADSA_Element < handle
         
         
         %Get function for the global fixed end forces of the element
-        function FixedEndForcesGlobal = GetFixedEndForcesGlobal(self)
-            FixedEndForcesGlobal = self.FixedEndForcesGlobal;
+        function fixedEndForcesGlobal = GetFixedEndForcesGlobal(self)
+            fixedEndForcesGlobal = self.fixedEndForcesGlobal;
         end
         
         
@@ -122,7 +122,7 @@ classdef ADSA_Element < handle
             %forces, and gamma to transform global displacement at the
             %element's DOF's into element's local coordinates
             elementForces=(self.localStiffness*self.gamma*eleDelta')+...
-                self.FixedEndForcesLocal;
+                self.fixedEndForcesLocal;
         end
         
     end
@@ -275,11 +275,11 @@ classdef ADSA_Element < handle
         
         %% Method to compute Fixed End Forces on the element due to
         %distributed loads
-        function [FixedEndForcesLocal, FixedEndForcesGlobal]=ComputeFixedEndForces(self)
+        function [fixedEndForcesLocal, fixedEndForcesGlobal]=ComputeFixedEndForces(self)
             
             %First, assemble a 12x1 matrix of local FEF's using general
             %equations.
-            FixedEndForcesLocal=[-self.distribLoad(1)*self.length/2;
+            fixedEndForcesLocal=[-self.distribLoad(1)*self.length/2;
                                  -self.distribLoad(2)*self.length/2;
                                  -self.distribLoad(3)*self.length/2;
                                  0;
@@ -293,7 +293,7 @@ classdef ADSA_Element < handle
                                  (self.distribLoad(2)*self.length^2)/12];
             
             %The FEF's in global coordinates are the transposed Gamma matrix times the local FEF's                 
-            FixedEndForcesGlobal=self.gamma'*FixedEndForcesLocal;
+            fixedEndForcesGlobal=self.gamma'*fixedEndForcesLocal;
             
         end 
         

@@ -5,11 +5,11 @@ classdef ADSA_Analysis < handle
   % Private properties 
     properties (Access = private)
             nnodes
-            Coordinates
+            coordinates
             concen
             fixity
             nele
-            Ends
+            ends
             A
             Izz
             Iyy
@@ -20,8 +20,8 @@ classdef ADSA_Analysis < handle
             Azz
             E
             v
-            webdir
-            DistribLoads
+            webDir
+            distribLoads
             Nodes
             Elements
             Kff
@@ -38,13 +38,13 @@ classdef ADSA_Analysis < handle
         
         %% Constructor
         function self = ADSA_Analysis(nnodes, coord, concen, fixity,...
-                     nele, ends,A,Izz,Iyy,J,Zzz,Zyy,Ayy,Azz,E,v,webdir, w)
+                     nele, ends,A,Izz,Iyy,J,Zzz,Zyy,Ayy,Azz,E,v,webDir, w)
             self.nnodes=nnodes;
-            self.Coordinates=coord;
+            self.coordinates=coord;
             self.concen=concen;
             self.fixity=fixity;
             self.nele=nele;
-            self.Ends=ends;
+            self.ends=ends;
             self.A=A;
             self.Izz=Izz;
             self.Iyy=Iyy;
@@ -55,16 +55,10 @@ classdef ADSA_Analysis < handle
             self.Azz=Azz;
             self.E=E;
             self.v=v;
-            self.webdir=webdir;
-            self.DistribLoads=w;
-            %Creating a vector of Node Objects
+            self.webDir=webDir;
+            self.distribLoads=w;
             self.Nodes=CreateNodes(self);
-            %Creating a vector of Element Objects
             self.Elements=CreateElements(self);
-            %Obtaining the structure stiffness sub matrices by first 
-            %assembling the structure stiffness matrix from the global
-            %stiffness matrix of each element and then dividing them
-            %corresponding to their associated DOFs
             [self.Kff, self.Kfn, self.Knf, self.Knn, ...
                  self.Ksf, self.Ksn]= ComputeStiffnessSubMatrices(self);
             
@@ -98,7 +92,7 @@ classdef ADSA_Analysis < handle
             %Loop through all nodes
             for i=1:self.nnodes
                 %Create Node objects and store in vector called Nodes
-                Nodes(i)=ADSA_Node(self.Coordinates(i,:), i);
+                Nodes(i)=ADSA_Node(self.coordinates(i,:), i);
             end
         end
             
@@ -110,12 +104,12 @@ classdef ADSA_Analysis < handle
                 %Store each object in a vector with index corresponding to
                 %its number.  Send the node objects that correspond to each
                 %end of the element and the element properties as arguments
-                Elements(i)=ADSA_Element([self.Nodes(self.Ends(i, 1)), ...
-                    self.Nodes(self.Ends(i,2))],self.A(i),...
+                Elements(i)=ADSA_Element([self.Nodes(self.ends(i, 1)), ...
+                    self.Nodes(self.ends(i,2))],self.A(i),...
                     self.Izz(i),self.Iyy(i),self.J(i),...
                     self.Zzz(i),self.Zyy(i),self.Ayy(i),self.Azz(i),...
-                    self.E(i),self.v(i), self.webdir(i,:), ...
-                    self.DistribLoads(i,:));
+                    self.E(i),self.v(i), self.webDir(i,:), ...
+                    self.distribLoads(i,:));
             end
         end
         
@@ -170,16 +164,16 @@ classdef ADSA_Analysis < handle
 
             %Transpose the fixity property matrix so linear indexing
             %matches the number of the DOF of each node
-            fixitytrans= self.fixity';
+            fixityTrans= self.fixity';
         
             %Find indices of free DOF's
-            freeDOF= find(isnan(fixitytrans));
+            freeDOF= find(isnan(fixityTrans));
 
             %Find indices of fixed (supported) DOF's
-            fixedDOF= find(fixitytrans==0);
+            fixedDOF= find(fixityTrans==0);
 
             %Find indices of DOF's with assigned displacement values
-            knownDOF= find(fixitytrans~=0 & ~isnan(fixitytrans));
+            knownDOF= find(fixityTrans~=0 & ~isnan(fixityTrans));
         
         end
         
@@ -213,15 +207,15 @@ classdef ADSA_Analysis < handle
             deltan=DEFL(knownDOF);
 
             %Calculate Loads at free DOF's
-            Pfback=self.Kff*deltaf+self.Kfn*deltan;
+            backPf=self.Kff*deltaf+self.Kfn*deltan;
             
             %Create actual load vector
-            [Pfreal, ~, ~, FEFreal] = CreateLoadVectors(self, freeDOF, ...
+            [realPf, ~, ~, realFEF] = CreateLoadVectors(self, freeDOF, ...
                                                       fixedDOF, knownDOF);
-            realLoads=Pfreal-FEFreal;
+            realLoads=realPf-realFEF;
 
             %Compute error in loads at free DOF's
-            error=realLoads-Pfback;
+            error=realLoads-backPf;
                        
         end
         
@@ -237,7 +231,7 @@ classdef ADSA_Analysis < handle
             %Estimate that P-S=log(kappa) where P is input significant 
             %digits and S is number of reliable significant digits returned
             lostDigits=log10(kappa);
-            fprintf('Likely to lose %.1f sign. digits\n\n', lostDigits)
+            fprintf('Likely to lose %.1f sig. digits\n\n', lostDigits)
         
             %Assign AFLAG based on how many significant digits will be lost
                 %Matlab can store 16; 3 are desired in return; no more than
@@ -258,17 +252,17 @@ classdef ADSA_Analysis < handle
             
             %Obtaining the applied loads, displacements and fixed end
             %forces
-            [Pf, Ps, Pn, FeFf, FeFs, FeFn, DeltaN] = ...
+            [Pf, Ps, Pn, FeFf, FeFs, FeFn, deltaN] = ...
                      CreateLoadVectors(self, freeDOF, fixedDOF, knownDOF);
             
             % Displacements at the Free DOFs
-            DeltaF= self.Kff\(Pf - FeFf - self.Kfn*DeltaN);
+            deltaF= self.Kff\(Pf - FeFf - self.Kfn*deltaN);
             
             %Forces/Reactions at Fixed DOFs
-            Ps= self.Ksf*DeltaF + self.Ksn*DeltaN + FeFs - Ps;
+            Ps= self.Ksf*deltaF + self.Ksn*deltaN + FeFs - Ps;
             
             %Forces/Reactions at Known DOFs
-            Pn= self.Knf*DeltaF + self.Knn*DeltaN + FeFn - Pn;
+            Pn= self.Knf*deltaF + self.Knn*deltaN + FeFn - Pn;
             
             %Initializing DEFL to zeros of 6 rows (No. of DOFs in a node)
             %and total number of nodes as number of columns
@@ -276,11 +270,11 @@ classdef ADSA_Analysis < handle
             
             %Placing the values of DeltaF in the indeces corresponding to
             %the Free DOFs
-            DEFL(freeDOF)= DeltaF;
+            DEFL(freeDOF)= deltaF;
             
             %Placing the values of DeltaN in the indeces corresponding to
             %the Known DOFs
-            DEFL(knownDOF)= DeltaN;
+            DEFL(knownDOF)= deltaN;
             
             %Placing Zero as values in the indeces corresponding to
             %the Fixed DOFs as there will be zero displacements there
@@ -318,7 +312,7 @@ classdef ADSA_Analysis < handle
         %Method to create the load vectors from the concentrated loads and
         %distributed loads and divide into pieces that correspond to 
         %degrees of freedom with free, fixed, and known displacements.
-        function [Pf, Ps, Pn, FeFf, FeFs, FeFn, DeltaN] = ...
+        function [Pf, Ps, Pn, FeFf, FeFs, FeFn, deltaN] = ...
                        CreateLoadVectors(self, freeDOF, fixedDOF, knownDOF)
             
             %Initializing the FeF matrix to all zeros
@@ -347,7 +341,7 @@ classdef ADSA_Analysis < handle
             
             
             fixitytrans= self.fixity';
-            DeltaN= fixitytrans(knownDOF);
+            deltaN= fixitytrans(knownDOF);
 
         end
 
@@ -363,7 +357,7 @@ classdef ADSA_Analysis < handle
             %passing element object and deflections 
                 for i=1:self.nele
                     ELE_FOR(i, 1:12)=ComputeForces(self.Elements(i), ...
-                    [DEFL(self.Ends(i,1), 1:6),DEFL(self.Ends(i,2), 1:6)]);
+                    [DEFL(self.ends(i,1), 1:6),DEFL(self.ends(i,2), 1:6)]);
                 end
         end
     
