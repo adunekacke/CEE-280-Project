@@ -138,18 +138,10 @@ classdef ADSA_Element < handle
             firstNode=GetNodeCoord(self.elementNodes(1)); 
             secondNode=GetNodeCoord(self.elementNodes(2)); 
             
-              % Initializing value of sum to 0 which will take the sum of
-              % squares of the difference of the x, y and z coordinates of
-              %the 2 nodes
-              sum=0;
-              for i=1:3
-                  l=(firstNode(i)-secondNode(i))^2;
-                  sum=sum+l;
-              end
-
-              %Use pythagorean Theorem to compute the element length
-              length=sqrt(sum);
-              
+            %Use pythagorean theorem to compute length of the element
+            length=sqrt(((firstNode(1)-secondNode(1))^2)+((firstNode(2)-...
+                      secondNode(2))^2)+((firstNode(3)-secondNode(3))^2));
+                            
         end
         
         

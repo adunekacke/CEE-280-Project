@@ -70,14 +70,20 @@ classdef ADSA_Analysis < handle
             
             %Call function which calculates values Mastan is expecting
         	[AFLAG, DEFL, REACT, ELE_FOR]=GetMastan2Returns(self);
+            disp(AFLAG)
             
             %Call function to compute the percent error in loads at free
-            %DOF's
-            Error=ComputeError(self, DEFL);
+            %DOF's if the analysis was successful
+            if AFLAG==1
+                Error=ComputeError(self, DEFL);
+                
+                %Display error to Command Window
+                disp('Error in Loads at Free DOF''s:')
+                fprintf('%.16f\n', Error);
             
-            %Display error to Command Window
-            disp('Error in Loads at Free DOF''s:')
-            fprintf('%.16f\n', Error);
+            else
+                disp('Error is not applicable; structure is unstable.')
+            end 
 
         end
         
@@ -184,11 +190,20 @@ classdef ADSA_Analysis < handle
             %CheckKffMatrix
             AFLAG= CheckKffMatrix(self);
             
-            %Calls ComputeDisplacementReactions
-            [DEFL, REACT]=ComputeDisplacementReactions(self);
-            
-            %RecoverElementForces
-            ELE_FOR=RecoverElementForces(self, DEFL);
+            %If analyis is succesful, run computations
+            if AFLAG==1
+                %Calls ComputeDisplacementReactions
+                [DEFL, REACT]=ComputeDisplacementReactions(self);
+
+                %RecoverElementForces
+                ELE_FOR=RecoverElementForces(self, DEFL);
+                
+            %If unsuccessful, halt analysis
+            else
+                DEFL=zeros(self.nnodes, 6);
+                REACT=zeros(self.nnodes, 6);
+                ELE_FOR=zeros(self.nele, 12);
+            end
   
         end
 
