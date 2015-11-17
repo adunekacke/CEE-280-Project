@@ -532,8 +532,8 @@ classdef ADSA_Analysis < handle
             FeFn= FeF(knownDOF);
             
             
-            fixityTrans= self.fixity';
-            deltaN= fixityTrans(knownDOF);
+            fixitytrans= self.fixity';
+            deltaN= fixitytrans(knownDOF);
 
         end
 
