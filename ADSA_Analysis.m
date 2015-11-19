@@ -122,10 +122,26 @@ classdef ADSA_Analysis < handle
 %
 %     Local Variables:
 %         ****insert variables local to ComputeStiffnessSubMatrices()*****
-%       fixityTrans
-%       freeDOF
-%       fixedDOF
-%       knownDOF
+%       fixityTrans      the fixity matrix transposed for linear indexing
+%       freeDOF          the numbers of the free degrees of freedom
+%       fixedDOF         the numbers of the fixed degrees of freedom
+%       knownDOF         the numbers of the known degrees of freedom
+%       deltaf           the displacements at the free degrees of freedom
+%       deltan           displacements at the known degrees of freedom
+%       backPf           the back-calculated loads on the system
+%       realPf           the real concentrated loads from the input
+%       realFEF          real fixed end forces from input distributed loads
+%       realLoads        real loads on system (concentrated and distributed)
+%       Pf               concentrated loads at free degrees of freedom
+%       Ps               concentrated loads at fixed supports
+%       Pn               concentrated loads at supports with known disp.
+%       FEFf             fixed end forces at free degrees of freedom
+%       FEFs             fixed end forces at fixed supports
+%       FEFn             fixed end forces at supports w/ known displacment
+%       Rs               reactions at fixed supports
+%       Rn               reactions at supports with known displacements
+%       FeF              all fixed end forces obtained from elements
+%       concen_t         transposed matrix of concentrated loads
 %
 %     Output Information:
 %       DEFL(i,1:6)      ==  node i's calculated 6 d.o.f. deflections
@@ -395,11 +411,11 @@ classdef ADSA_Analysis < handle
             DEFL=DEFL';
 
             %Get vectors of free and known deflections
-            deltaf=DEFL(freeDOF);
-            deltan=DEFL(knownDOF);
+            deltaF=DEFL(freeDOF);
+            deltaN=DEFL(knownDOF);
 
             %Calculate Loads at free DOF's
-            backPf=self.Kff*deltaf+self.Kfn*deltan;
+            backPf=self.Kff*deltaF+self.Kfn*deltaN;
             
             %Create actual load vector
             [realPf, ~, ~, realFEF] = CreateLoadVectors(self, freeDOF, ...
@@ -444,17 +460,17 @@ classdef ADSA_Analysis < handle
             
             %Obtaining the applied loads, displacements and fixed end
             %forces
-            [Pf, Ps, Pn, FeFf, FeFs, FeFn, deltaN] = ...
+            [Pf, Rs, Rn, FeFf, FeFs, FeFn, deltaN] = ...
                      CreateLoadVectors(self, freeDOF, fixedDOF, knownDOF);
             
             % Displacements at the Free DOFs
             deltaF= self.Kff\(Pf - FeFf - self.Kfn*deltaN);
             
             %Forces/Reactions at Fixed DOFs
-            Ps= self.Ksf*deltaF + self.Ksn*deltaN + FeFs - Ps;
+            Rs= self.Ksf*deltaF + self.Ksn*deltaN + FeFs - Rs;
             
             %Forces/Reactions at Known DOFs
-            Pn= self.Knf*deltaF + self.Knn*deltaN + FeFn - Pn;
+            Rn= self.Knf*deltaF + self.Knn*deltaN + FeFn - Rn;
             
             %Initializing DEFL to zeros of 6 rows (No. of DOFs in a node)
             %and total number of nodes as number of columns
@@ -487,11 +503,11 @@ classdef ADSA_Analysis < handle
             
             %Placing the values of Pn in the indeces corresponding to
             %the Known DOFs
-            REACT(knownDOF)= Pn;
+            REACT(knownDOF)= Rn;
             
             %Placing the values of Ps in the indeces corresponding to
             %the Fixed DOFs
-            REACT(fixedDOF)= Ps;
+            REACT(fixedDOF)= Rs;
             
             %Transposing the REACT matrix to have 6 columns (corresponding 
             %to 6 DOFs in a node) and number of nodes as the number of
