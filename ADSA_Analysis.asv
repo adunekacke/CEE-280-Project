@@ -222,7 +222,6 @@ classdef ADSA_Analysis < handle
             Knn
             Ksf
             Ksn
-            AFLAG
             DEFL
             REACT
             ELE_FOR
@@ -310,7 +309,8 @@ classdef ADSA_Analysis < handle
             AFLAG= self.AFLAG;
             DEFL= self.DEFL;
             REACT= self.REACT;
-            ELE_FOR= self.ELE_FOR;
+            
+  
         end
     end
     
