@@ -26,16 +26,10 @@ classdef ADSA_Analysis < handle
 %       ComputeError       Back-calculates the applied forces from the 
 %                            deflections and compares to actual loads
 %       CheckKff           Checks the condition number and estimates lost
-%                            digits to determine if analysis will be 
-%                            successful
-%       ComputeDisplacementReactions    Computes the displacements and 
-%                            reactions using the stiffness method
-%       CreateLoadVectors  Separates concentrated loads and fixed end
-%                            forces based on degree of freedom 
-%                            classification once it gets the fixed end 
-%                            forces from the element class
-%       RecoverElementForces  Using the displacements, call the element 
-%                            method to compute internal forces 
+%       digit
+%       ComputeDisplacementReactions
+%       CreateLoadVectors
+%       RecoverEleementForces
 %       
 %
 %  Dictionary of Variables
