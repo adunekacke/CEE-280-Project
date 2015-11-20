@@ -291,9 +291,30 @@ classdef ADSA_Analysis < handle
         %% Run the analysis
         function [AFLAG, DEFL, REACT, ELE_FOR]=RunAnalysis(self)
             
-            %Call function which calculates values Mastan is expecting
-        	[AFLAG, DEFL, REACT, ELE_FOR]=GetMastan2Returns(self);
-            disp(AFLAG)
+            %CheckKffMatrix
+            self.AFLAG= CheckKffMatrix(self);
+            
+            AFLAG= self.AFLAG;
+            
+            %If analyis is succesful, run computations
+            if AFLAG==1
+                %Calls ComputeDisplacementReactions
+                [self.DEFL, self.REACT]=ComputeDisplacementReactions(self);
+                
+                DEFL= self.DEFL;
+                REACT= self.REACT;
+
+                %RecoverElementForces
+                self.ELE_FOR=RecoverElementForces(self);
+                
+                ELE_FOR= self.ELE_FOR;
+                
+            %If unsuccessful, halt analysis
+            else
+                self.DEFL=zeros(self.nnodes, 6);
+                self.REACT=zeros(self.nnodes, 6);
+                self.ELE_FOR=zeros(self.nele, 12);
+            end
             
             %Call function to compute the percent error in loads at free
             %DOF's if the analysis was successful
@@ -307,10 +328,16 @@ classdef ADSA_Analysis < handle
             else
                 disp('Error is not applicable; structure is unstable.')
             end 
-
         end
         
-        
+        %Method to make the returns that Mastan2 expects
+        function [AFLAG, DEFL, REACT, ELE_FOR]=GetMastan2Returns(self)
+            
+            AFLAG= self.AFLAG;
+            DEFL= self.DEFL;
+            REACT= self.REACT;
+            ELE_FOR= self.ELE_FOR;
+        end
     end
     
   % Private methods go here
@@ -404,30 +431,6 @@ classdef ADSA_Analysis < handle
             %Find indices of DOF's with assigned displacement values
             knownDOF= find(fixityTrans~=0 & ~isnan(fixityTrans));
         
-        end
-        
-        
-        %Method to make the returns that Mastan2 expects
-        function [AFLAG, DEFL, REACT, ELE_FOR]=GetMastan2Returns(self)
-            
-            %CheckKffMatrix
-            AFLAG= CheckKffMatrix(self);
-            
-            %If analyis is succesful, run computations
-            if AFLAG==1
-                %Calls ComputeDisplacementReactions
-                [DEFL, REACT]=ComputeDisplacementReactions(self);
-
-                %RecoverElementForces
-                ELE_FOR=RecoverElementForces(self, DEFL);
-                
-            %If unsuccessful, halt analysis
-            else
-                DEFL=zeros(self.nnodes, 6);
-                REACT=zeros(self.nnodes, 6);
-                ELE_FOR=zeros(self.nele, 12);
-            end
-  
         end
 
         

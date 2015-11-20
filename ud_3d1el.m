@@ -220,6 +220,8 @@ function [DEFL,REACT,ELE_FOR,AFLAG] = ud_3d1el(...
 %AFLAG is infinity until the analysis is performed and it is modified
 AFLAG = inf;
 
+DEFL=[]; REACT=[]; ELE_FOR=[];
+
 %Create an Analysis Object
 Analysis = ADSA_Analysis(nnodes, coord, concen, fixity, nele, ends,A,Izz,Iyy,J,Zzz,Zyy,...
 		Ayy,Azz,E,v,webdir, w);
@@ -228,7 +230,7 @@ Analysis = ADSA_Analysis(nnodes, coord, concen, fixity, nele, ends,A,Izz,Iyy,J,Z
 %Mastan2 returns
 [AFLAG, DEFL, REACT, ELE_FOR]=Analysis.RunAnalysis();
 
-% DEFL=[]; REACT=[]; ELE_FOR=[];
+
  
 
 %% Diagnostic tools: Instructions
