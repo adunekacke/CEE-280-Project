@@ -153,9 +153,7 @@ classdef ADSA_Element < handle
             secondNode=GetNodeCoord(self.elementNodes(2)); 
             
             %Create x' portion of small gamma matrix using vector projections
-            xprime=[(secondNode(1)-firstNode(1)),...
-                    (secondNode(2)-firstNode(2)),...
-                    (secondNode(3)-firstNode(3))]./self.length;
+            xprime=(secondNode-firstNode)./self.length;
                 
             %Create z' portion of small gamma using cross product of x' and
             %web direction unit vector
