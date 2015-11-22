@@ -1,6 +1,36 @@
 classdef ADSA_Node < handle
 
-% Node class for a 3-dimensional framed structure
+%Node class for a three-dimentional elastic frame structure
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  Functions Called
+%     Public:
+%       ADSA_Node      Constructs the node object and stores its
+%                        properties
+%       GetNodeCoord   Getter function to get the nodal coordinates of any
+%                        node
+%       GetNodeDOF     Getter function to get the nodal Degrees of Freedom
+%                        of any node
+%     Private:
+%       AssignDOF      Assign the DOFs of a node according to its node
+%                        number and saves it as a property
+%       
+%
+%  Dictionary of Variables
+%     Input Information and Properties:
+%       nodeCoord      ==  3x1 vector containing the x, y, and z 
+%                            coordinates of the node            
+%       nodeDOF        ==  6x1 vector containing the 6 Degrees of Freedom 
+%                            (displacement along x, y and z directions and 
+%                            rotation about x, y and z directions
+%                            respectively) of the node corresponding to its
+%                            node number
+%       nodeNumber     ==  The number assigned to the node which is used as
+%                            its identifier and to assign its DOFs
+%
+%     Local Variables:
+%       No local variables used in the Node Class
     
     %% Private properties go here
     properties (Access = private)

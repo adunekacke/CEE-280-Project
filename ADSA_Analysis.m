@@ -1,10 +1,11 @@
 classdef ADSA_Analysis < handle
 
-%Analysis class for a three-dimentional elastic structure
+%Analysis class for a three-dimentional elastic frame structure
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 %  Functions Called
+%     Public:
 %       ADSA_Analysis      Constructs the analysis object and stores its
 %                            properties
 %       RunAnalysis        Conducts analysis of the structure, performing
@@ -14,6 +15,7 @@ classdef ADSA_Analysis < handle
 %       GetMastan2Returns  Getter function to get deflections, reactions,
 %                            and element forces again after analysis has 
 %                            been run inititially
+%     Private:
 %       CreateNodes        Loops through all the nodes and creates the 
 %                            node objects
 %       CreateElements     Loops through all the elements and creates the 
@@ -199,14 +201,6 @@ classdef ADSA_Analysis < handle
 %                              ELE_FOR(i,10) = x-moment at end node
 %                              ELE_FOR(i,11) = y-moment at end node
 %                              ELE_FOR(i,12) = z-moment at end node
-%                            If you are not programming warping torsion, the ELE_FOR
-%                            array needs to contain only 12 columns, i.e. ELE_FOR(i,1:12)                           
-%                            For those programming warping torsion, the bimoments and
-%                            rates of twist should be stored as follows.
-%                              ELE_FOR(i,13) = bimoment at start node
-%                              ELE_FOR(i,14) = bimoment at end node
-%                              ELE_FOR(i,15) = rate of twist at start node
-%                              ELE_FOR(i,16) = rate of twist at end node
 %       AFLAG            ==  logical flag to indicate if a successful
 %                            analysis has been completed
 %                              AFLAG = 1     Successful
@@ -292,22 +286,15 @@ classdef ADSA_Analysis < handle
         function [AFLAG, DEFL, REACT, ELE_FOR]=RunAnalysis(self)
             
             %CheckKffMatrix
-            self.AFLAG= CheckKffMatrix(self);
-            
-            AFLAG= self.AFLAG;
+            AFLAG= CheckKffMatrix(self);
             
             %If analyis is succesful, run computations
             if AFLAG==1
                 %Calls ComputeDisplacementReactions
-                [self.DEFL, self.REACT]=ComputeDisplacementReactions(self);
-                
-                DEFL= self.DEFL;
-                REACT= self.REACT;
+                [DEFL, REACT]=ComputeDisplacementReactions(self);
 
                 %RecoverElementForces
-                self.ELE_FOR=RecoverElementForces(self);
-                
-                ELE_FOR= self.ELE_FOR;
+                ELE_FOR=RecoverElementForces(self);
                 
             %If unsuccessful, halt analysis
             else
@@ -475,13 +462,17 @@ classdef ADSA_Analysis < handle
             fprintf('Likely to lose %.1f sig. digits\n\n', lostDigits)
         
             %Assign AFLAG based on how many significant digits will be lost
-                %Matlab can store 16; 3 are desired in return; no more than
-                %13 should be lost for success
+            %Matlab can store 16; 3 are desired in return; no more than
+            %13 should be lost for success
+            
+            %AFLAG is stored as a property to access it later without 
+            %running the entire analysis
             if lostDigits > 13
-                AFLAG= 0;
+                self.AFLAG= 0;
             else
-                AFLAG= 1;
+                self.AFLAG= 1;
             end
+            AFLAG= self.AFLAG;
         end 
         
         
@@ -526,6 +517,10 @@ classdef ADSA_Analysis < handle
             %rows- The format which MASTAN2 requires
             DEFL= DEFL';
             
+            %Saving the Deflections as a property to access them later
+            %without running the entire analysis
+            self.DEFL= DEFL;
+            
             %Initializing REACT to zeros of 6 rows (No. of DOFs in a node)
             %and total number of nodes as number of columns
             REACT= zeros(6, self.nnodes);
@@ -546,6 +541,10 @@ classdef ADSA_Analysis < handle
             %to 6 DOFs in a node) and number of nodes as the number of
             %rows- The format which MASTAN2 requires
             REACT= REACT';
+            
+            %Saving the Reactions as a property to access them later
+            %without running the entire analysis
+            self.REACT= REACT;
 
         end
         
@@ -600,6 +599,10 @@ classdef ADSA_Analysis < handle
                     ELE_FOR(i, 1:12)=ComputeForces(self.Elements(i), ...
                     [self.DEFL(self.ends(i,1), 1:6),self.DEFL(self.ends(i,2), 1:6)]);
                 end
+                
+            %Saving the Element Forces as a property to access them later
+            %without running the entire analysis
+            self.ELE_FOR= ELE_FOR;
         end
     
     end
