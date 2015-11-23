@@ -290,31 +290,29 @@ classdef ADSA_Analysis < handle
             
             %If analyis is succesful, run computations
             if AFLAG==1
-                %Calls ComputeDisplacementReactions
+                %Calls ComputeDisplacementReactions to get deflections and
+                %reactions
                 [DEFL, REACT]=ComputeDisplacementReactions(self);
 
-                %RecoverElementForces
+                %RecoverElementForces to compute the internal forces in the
+                %elements
                 ELE_FOR=RecoverElementForces(self);
+                
+                %Compute the error in the associated with the loads
+                error=ComputeError(self);
+                
+                %Display error to Command Window
+                disp('Error in Loads at Free DOF''s:')
+                fprintf('%.16f\n', error);
                 
             %If unsuccessful, halt analysis
             else
                 self.DEFL=zeros(self.nnodes, 6);
                 self.REACT=zeros(self.nnodes, 6);
                 self.ELE_FOR=zeros(self.nele, 12);
-            end
-            
-            %Call function to compute the percent error in loads at free
-            %DOF's if the analysis was successful
-            if AFLAG==1
-                error=ComputeError(self, DEFL);
-                
-                %Display error to Command Window
-                disp('Error in Loads at Free DOF''s:')
-                fprintf('%.16f\n', error);
-            
-            else
                 disp('Error is not applicable; structure is unstable.')
-            end 
+            end
+           
         end
         
         %Method to make the returns that Mastan2 expects
