@@ -186,7 +186,7 @@ classdef ADSA_Analysis < handle
 %                              REACT(i,4) = moment about X direction
 %                              REACT(i,5) = moment about Y direction
 %                              REACT(i,6) = moment about Z direction
-%       ELE_FOR(i,1:1?)  ==  element i's internal forces and moments
+%       ELE_FOR(i,1:12)  ==  element i's internal forces and moments
 %                            Note: All values reference the element's local
 %                                  coordinate system.
 %                              ELE_FOR(i,1)  = x-force at start node
@@ -246,6 +246,7 @@ classdef ADSA_Analysis < handle
             DEFL
             REACT
             ELE_FOR
+            error
     end
     
     
@@ -299,7 +300,7 @@ classdef ADSA_Analysis < handle
                 ELE_FOR=RecoverElementForces(self);
                 
                 %Compute the error in the associated with the loads
-                error=ComputeError(self);
+                error= ComputeError(self);
                 
                 %Display error to Command Window
                 disp('Error in Loads at Free DOF''s:')
@@ -307,21 +308,22 @@ classdef ADSA_Analysis < handle
                 
             %If unsuccessful, halt analysis
             else
-                self.DEFL=zeros(self.nnodes, 6);
-                self.REACT=zeros(self.nnodes, 6);
-                self.ELE_FOR=zeros(self.nele, 12);
+                self.DEFL= zeros(self.nnodes, 6);
+                self.REACT= zeros(self.nnodes, 6);
+                self.ELE_FOR= zeros(self.nele, 12);
                 disp('Error is not applicable; structure is unstable.')
             end
            
         end
         
         %Method to make the returns that Mastan2 expects
-        function [AFLAG, DEFL, REACT, ELE_FOR]=GetMastan2Returns(self)
+        function [AFLAG, DEFL, REACT, ELE_FOR, error]= GetMastan2Returns(self)
             
             AFLAG= self.AFLAG;
             DEFL= self.DEFL;
             REACT= self.REACT;
             ELE_FOR= self.ELE_FOR;
+            error= self.error;
         end
     end
     
@@ -420,7 +422,7 @@ classdef ADSA_Analysis < handle
 
         
         %Method to compute the error in the analysis due to lost digits
-        function error=ComputeError(self)
+        function error= ComputeError(self)
                         
             %Get DOF's that are free and known
             [freeDOF, fixedDOF, knownDOF]=ClassifyDOF(self);
@@ -438,10 +440,11 @@ classdef ADSA_Analysis < handle
             %Create actual load vector
             [realPf, ~, ~, realFEF] = CreateLoadVectors(self, freeDOF, ...
                                                       fixedDOF, knownDOF);
-            realLoads=realPf-realFEF;
+            realLoads= realPf-realFEF;
 
             %Compute error in loads at free DOF's
-            error=realLoads-backPf;
+            self.error= realLoads-backPf;
+            error= self.error;
                        
         end
         
@@ -482,17 +485,17 @@ classdef ADSA_Analysis < handle
             
             %Obtaining the applied loads, displacements and fixed end
             %forces
-            [Pf, Rs, Rn, FeFf, FeFs, FeFn, deltaN] = ...
+            [Pf, Ps, Pn, FeFf, FeFs, FeFn, deltaN] = ...
                      CreateLoadVectors(self, freeDOF, fixedDOF, knownDOF);
             
             % Displacements at the Free DOFs
             deltaF= self.Kff\(Pf - FeFf - self.Kfn*deltaN);
             
             %Forces/Reactions at Fixed DOFs
-            Rs= self.Ksf*deltaF + self.Ksn*deltaN + FeFs - Rs;
+            Rs= self.Ksf*deltaF + self.Ksn*deltaN + FeFs - Ps;
             
             %Forces/Reactions at Known DOFs
-            Rn= self.Knf*deltaF + self.Knn*deltaN + FeFn - Rn;
+            Rn= self.Knf*deltaF + self.Knn*deltaN + FeFn - Pn;
             
             %Initializing DEFL to zeros of 6 rows (No. of DOFs in a node)
             %and total number of nodes as number of columns

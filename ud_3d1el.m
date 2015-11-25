@@ -175,7 +175,7 @@ function [DEFL,REACT,ELE_FOR,AFLAG] = ud_3d1el(...
 %                              REACT(i,4) = moment about X direction
 %                              REACT(i,5) = moment about Y direction
 %                              REACT(i,6) = moment about Z direction
-%       ELE_FOR(i,1:1?)  ==  element i's internal forces and moments
+%       ELE_FOR(i,1:12)  ==  element i's internal forces and moments
 %                            Note: All values reference the element's local
 %                                  coordinate system.
 %                              ELE_FOR(i,1)  = x-force at start node
@@ -208,14 +208,8 @@ function [DEFL,REACT,ELE_FOR,AFLAG] = ud_3d1el(...
 %       Version 4.0/ADSA/11/15/2015
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Student's code
-
-%   You will implement the following three classes:
-%
-%       ADSA_Analysis
-%       ADSA_Element
-%       ADSA_Node
-% 
+%% ADSA's code
+ 
 
 %AFLAG is infinity until the analysis is performed and it is modified
 AFLAG = inf;
