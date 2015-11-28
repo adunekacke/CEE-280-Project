@@ -139,37 +139,55 @@ classdef ADSA_Analysis < handle
 %                              w(i,1) = x component of uniform load
 %                              w(i,2) = y component of uniform load
 %                              w(i,3) = z component of uniform load
-%       Nodes             vector of Node objects of length nnodes
-%       Elements          vector of Element objects of length nele
-%       Kff               matrix of free-free stiffness terms
-%       Kfn               matrix of free-known stiffness terms
-%       Knf               matrix of known-free stiffness terms
-%       Knn               matrix of known-known stiffness terms
-%       Ksf               matrix of fixed-free stiffness terms
-%       Ksn               matrix of fixed-known stiffness terms
+%       Nodes             Vector of Node objects of length nnodes
+%       Elements          Vector of Element objects of length nele
+%       Kff               Matrix of free-free stiffness terms
+%       Kfn               Matrix of free-known stiffness terms
+%       Knf               Matrix of known-free stiffness terms
+%       Knn               Matrix of known-known stiffness terms
+%       Ksf               Matrix of fixed-free stiffness terms
+%       Ksn               Matrix of fixed-known stiffness terms
 %
 %     Local Variables:
 %         ****insert variables local to ComputeStiffnessSubMatrices()*****
-%       fixityTrans      the fixity matrix transposed for linear indexing
-%       freeDOF          the numbers of the free degrees of freedom
-%       fixedDOF         the numbers of the fixed degrees of freedom
-%       knownDOF         the numbers of the known degrees of freedom
-%       deltaf           the displacements at the free degrees of freedom
-%       deltan           displacements at the known degrees of freedom
-%       backPf           the back-calculated loads on the system
-%       realPf           the real concentrated loads from the input
-%       realFEF          real fixed end forces from input distributed loads
-%       realLoads        real loads on system (concentrated and distributed)
-%       Pf               concentrated loads at free degrees of freedom
-%       Ps               concentrated loads at fixed supports
-%       Pn               concentrated loads at supports with known disp.
-%       FEFf             fixed end forces at free degrees of freedom
-%       FEFs             fixed end forces at fixed supports
-%       FEFn             fixed end forces at supports w/ known displacment
-%       Rs               reactions at fixed supports
-%       Rn               reactions at supports with known displacements
-%       FeF              all fixed end forces obtained from elements
-%       concen_t         transposed matrix of concentrated loads
+%       fixityTrans      The fixity matrix transposed for linear indexing
+%       freeDOF          The numbers of the free degrees of freedom
+%       fixedDOF         The numbers of the fixed degrees of freedom
+%       knownDOF         The numbers of the known degrees of freedom
+%       deltaf           The displacements at the free degrees of freedom
+%       deltan           Displacements at the known degrees of freedom
+%       backPf           The back-calculated loads on the system
+%       realPf           The real concentrated loads from the input
+%       realFEF          Real fixed end forces from input distributed loads
+%       realLoads        Real loads on system (concentrated and distributed)
+%       Pf               Concentrated loads at free degrees of freedom
+%       Ps               Concentrated loads at fixed supports
+%       Pn               Concentrated loads at supports with known disp.
+%       FEFf             Fixed end forces at free degrees of freedom
+%       FEFs             Fixed end forces at fixed supports
+%       FEFn             Fixed end forces at supports w/ known displacment
+%       Rs               Reactions at fixed supports
+%       Rn               Reactions at supports with known displacements
+%       FeF              All fixed end forces obtained from elements
+%       concen_t         Transposed matrix of concentrated loads
+%       m                Stores row/column length of the Structure
+%                        Stiffness Matrix
+%       el_DOF           Stores the vector of DOFs of an element while
+%                        computing the sparse Structure Stiffness Matrix
+%       el_Stiff         Stores the global stiffness matrix of an element
+%                        while computing the sparse Structure Stiffness 
+%                        Matrix
+%       row              Vector consisting of the DOFs corresponding to the
+%                        row indeces of the non-zero stiffness values while
+%                        computing the sparse Structure Stiffness Matrix
+%       col              Vector consisting of the DOFs corresponding to the
+%                        column indeces of the non-zero stiffness values 
+%                        while computing the sparse Structure Stiffness 
+%                        Matrix
+%       stiff            Vector Consisting of non-zero stiffness values
+%                        corresponding to the DOFs 'row' and 'col'
+%       count            An incrementing variable to append values to the
+%                        'row', 'col' and 'stiff' vectors
 %
 %     Output Information:
 %       DEFL(i,1:6)      ==  node i's calculated 6 d.o.f. deflections
@@ -370,26 +388,56 @@ classdef ADSA_Analysis < handle
             %of the K matrix are being stored and the function is also
             %required to be called just once in the analysis.
             
-            %Creating the complete Structure Stiffness Matrix by
-            %combining global stiffness matrices of individual elements
+            %Creating a sparse Structure Stiffness Matrix by
+            %combining the non-zero values of the global stiffness matrices
+            %of individual elements
             
-            %Initializing the K matrix to all zeros
-            K = zeros(self.nnodes*6); 
+            %Storing the size (rows or columns) of the complete Structure 
+            %Stiffness Matrix
+            m= self.nnodes*6;
+            
+            %Initializing 'count' to 1
+            count= 1;
             
             % Looping over all the element objects
-            for i= 1:self.nele
-                %Assembling the structure stiffness matrix by adding the
-                %values of the global stiffness matrix of the elements to
-                %the corresponding DOFs in the structure stiffness matrix
-                K(GetElementDOF(self.Elements(i)),...
-                    GetElementDOF(self.Elements(i))) = ...
-                    K(GetElementDOF(self.Elements(i)),...
-                    GetElementDOF(self.Elements(i)))... 
-                    + GetGlobalStiffness(self.Elements(i));
+            for z= 1:self.nele
+                
+                %Storing the zth Element's DOFs as a vector in 'el_DOF'
+                el_DOF= GetElementDOF(self.Elements(z));
+                
+                %Storing the zth Element's Global Stiffness Matrix as
+                %'el_Stiff'
+                el_Stiff= GetGlobalStiffness(self.Elements(z));
+                
+                for x= 1:12
+                    for y= 1:12
+                        %Concentrating only on non-zero values
+                        if el_Stiff(x,y)~=0 
+                            
+                            % The DOF el_DOF(x) corresponding to non-zero 
+                            % stiffness value gets appended to the 'row' 
+                            % vector
+                            row(count)= el_DOF(x);
+                            
+                            % The DOF el_DOF(y) corresponding to non-zero 
+                            % stiffness value gets appended to the 'col' 
+                            % vector
+                            col(count)= el_DOF(y);
+                            
+                            % The value of stiffness corresponding to the
+                            % DOFs of el_DOF(x) and el_DOF(y) gets appended
+                            % to the 'stiff' vector
+                            stiff(count)= el_Stiff(x,y);
+                            count= count + 1;
+                        end
+                    end
+                end
             end
-           
-            %Store as a sparse matrix
-            K = sparse(K);
+            
+            % Using the format of the sparse matrix: K= sparse(i,j,v,m,n)
+            % the Structure Stiffness Matrix is stored as a sparse matrix
+            % Since Total No. of rows= Total No. of columns, m=n= nnodes*6
+            K= sparse(row, col, stiff, m, m); 
             
             [freeDOF, fixedDOF, knownDOF]=  ClassifyDOF(self);
 
