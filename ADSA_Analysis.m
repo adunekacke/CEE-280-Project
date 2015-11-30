@@ -149,7 +149,25 @@ classdef ADSA_Analysis < handle
 %       Ksn               Matrix of fixed-known stiffness terms
 %
 %     Local Variables:
-%         ****insert variables local to ComputeStiffnessSubMatrices()*****
+%       m                Stores row/column length of the Structure
+%                        Stiffness Matrix
+%       el_DOF           Stores the vector of DOFs of an element while
+%                        computing the sparse Structure Stiffness Matrix
+%       el_Stiff         Stores the global stiffness matrix of an element
+%                        while computing the sparse Structure Stiffness 
+%                        Matrix
+%       row              Vector consisting of the DOFs corresponding to the
+%                        row indeces of the non-zero stiffness values while
+%                        computing the sparse Structure Stiffness Matrix
+%       col              Vector consisting of the DOFs corresponding to the
+%                        column indeces of the non-zero stiffness values 
+%                        while computing the sparse Structure Stiffness 
+%                        Matrix
+%       stiff            Vector Consisting of non-zero stiffness values
+%                        corresponding to the DOFs 'row' and 'col'
+%       count            An incrementing variable to append values to the
+%                        'row', 'col' and 'stiff' vectors
+%       K                Complete structural stiffness matrix
 %       fixityTrans      The fixity matrix transposed for linear indexing
 %       freeDOF          The numbers of the free degrees of freedom
 %       fixedDOF         The numbers of the fixed degrees of freedom
@@ -170,24 +188,6 @@ classdef ADSA_Analysis < handle
 %       Rn               Reactions at supports with known displacements
 %       FeF              All fixed end forces obtained from elements
 %       concen_t         Transposed matrix of concentrated loads
-%       m                Stores row/column length of the Structure
-%                        Stiffness Matrix
-%       el_DOF           Stores the vector of DOFs of an element while
-%                        computing the sparse Structure Stiffness Matrix
-%       el_Stiff         Stores the global stiffness matrix of an element
-%                        while computing the sparse Structure Stiffness 
-%                        Matrix
-%       row              Vector consisting of the DOFs corresponding to the
-%                        row indeces of the non-zero stiffness values while
-%                        computing the sparse Structure Stiffness Matrix
-%       col              Vector consisting of the DOFs corresponding to the
-%                        column indeces of the non-zero stiffness values 
-%                        while computing the sparse Structure Stiffness 
-%                        Matrix
-%       stiff            Vector Consisting of non-zero stiffness values
-%                        corresponding to the DOFs 'row' and 'col'
-%       count            An incrementing variable to append values to the
-%                        'row', 'col' and 'stiff' vectors
 %
 %     Output Information:
 %       DEFL(i,1:6)      ==  node i's calculated 6 d.o.f. deflections
@@ -260,7 +260,6 @@ classdef ADSA_Analysis < handle
             Knn
             Ksf
             Ksn
-            FeFf
             AFLAG
             DEFL
             REACT
@@ -485,13 +484,11 @@ classdef ADSA_Analysis < handle
 
             %Calculate Loads at free DOF's
             backPf=self.Kff*deltaF+self.Kfn*deltaN;
-
-            concen_t= self.concen';
-            realPf= concen_t(freeDOF);
             
-            realFeFf= self.FeFf;
-            
-            realLoads= realPf-realFeFf;
+            %Create actual load vector
+            [realPf, ~, ~, realFEF] = CreateLoadVectors(self, freeDOF, ...
+                                                      fixedDOF, knownDOF);
+            realLoads= realPf-realFEF;
 
             %Compute error in loads at free DOF's
             self.error= realLoads-backPf;
@@ -627,11 +624,7 @@ classdef ADSA_Analysis < handle
             Ps= concen_t(fixedDOF);
             Pn= concen_t(knownDOF);
             
-            %Saving FeFf as a property so that the entire function is not 
-            %called just to copmute FeFf
-            self.FeFf= FeF(freeDOF);
-            
-            FeFf= self.FeFf;
+            FeFf= FeF(freeDOF);
             FeFs= FeF(fixedDOF);
             FeFn= FeF(knownDOF);
             
